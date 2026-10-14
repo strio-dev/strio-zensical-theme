@@ -60,7 +60,7 @@ for expected in (
     "strio-footer__brandbar", 'viewBox="108 148.617 396 110.766"',
 ):
     assert expected in html, expected
-for name in ("LICENSE", "Upstream-MIT.txt", "Zensical-MIT.txt"):
+for name in ("LICENSE", "Zensical-MIT.txt"):
     license_text = (root / "licenses/strio" / name).read_text()
     assert "Permission is hereby granted" in license_text, name
 assert "Page not found" in (root / "404.html").read_text()

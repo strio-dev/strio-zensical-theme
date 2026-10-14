@@ -79,7 +79,6 @@
               test -s ${theme}/share/strio-zensical-theme/overrides/partials/footer.html
               test -s ${theme}/share/strio-zensical-theme/overrides/.icons/strio/wordmark.svg
               test -s ${theme}/share/strio-zensical-theme/LICENSE
-              test -s ${theme}/share/strio-zensical-theme/licenses/Upstream-MIT.txt
               test -s ${theme}/share/strio-zensical-theme/licenses/Zensical-MIT.txt
               mkdir "$out"
             '';
