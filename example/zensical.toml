@@ -5,7 +5,7 @@ site_url = "https://example.com/acme/"
 docs_dir = "docs"
 site_dir = "site"
 dev_addr = "127.0.0.1:8000"
-extra_css = ["stylesheets/strio.css", "stylesheets/acme.css"]
+extra_css = ["stylesheets/strio.css"]
 extra_javascript = ["javascripts/copy.js", "javascripts/toc.js"]
 nav = [{ "Overview" = "index.md" }, { "Details" = "details.md" }]
 

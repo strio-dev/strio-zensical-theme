@@ -1,5 +1,4 @@
-/* System fonts keep local previews independent of third-party font services.
-   The logo contains the accepted, unmodified Nimbus Sans Bold outlines. */
+/* System fonts keep local previews independent of third-party font services. */
 :root {
   --md-text-font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --md-code-font: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
@@ -198,26 +197,26 @@
 .md-typeset .highlight .nl { color: var(--md-code-hl-name-color); }
 .md-typeset .highlight .na { color: var(--md-code-hl-special-color); }
 .md-typeset .highlight .kc { color: var(--md-code-hl-number-color); }
-:is(.strio-actions, .coopr-actions) { display: flex; flex-wrap: wrap; gap: .6rem; }
-:is(.strio-actions, .coopr-actions) .md-button { padding: .5rem 1.3rem; }
-:is(.strio-intro, .coopr-intro) { font-size: 1.15rem; max-width: 35rem; }
-:is(.strio-paths, .coopr-paths) { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1.5rem 0 2rem; }
-:is(.strio-path, .coopr-path) { display: flex; flex-direction: column; gap: .8rem; border: 1px solid var(--md-default-fg-color--lightest); border-radius: calc(1.8 * var(--strio-radius)); padding: 1.1rem; }
-:is(.strio-path__title, .coopr-path__title) { font-size: 1rem; font-weight: 600; line-height: 1.4; letter-spacing: -.02em; }
-:is(.strio-path, .coopr-path) p { margin: 0; }
-:is(.strio-path, .coopr-path) > p:last-child { margin-top: auto; }
+.strio-actions { display: flex; flex-wrap: wrap; gap: .6rem; }
+.strio-actions .md-button { padding: .5rem 1.3rem; }
+.strio-intro { font-size: 1.15rem; max-width: 35rem; }
+.strio-paths { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1.5rem 0 2rem; }
+.strio-path { display: flex; flex-direction: column; gap: .8rem; border: 1px solid var(--md-default-fg-color--lightest); border-radius: calc(1.8 * var(--strio-radius)); padding: 1.1rem; }
+.strio-path__title { font-size: 1rem; font-weight: 600; line-height: 1.4; letter-spacing: -.02em; }
+.strio-path p { margin: 0; }
+.strio-path > p:last-child { margin-top: auto; }
 /* Luma small outline button with a trailing icon. */
-.md-typeset .md-button:is(.strio-container-link, .coopr-container-link) { min-height: 1.6rem; gap: .2rem; padding: 0 .4rem 0 .6rem; border: 1px solid color-mix(in srgb, var(--md-default-fg-color) 20%, transparent); background: transparent; }
-.md-typeset .md-button:is(.strio-container-link, .coopr-container-link):hover { background: var(--strio-button-muted-bg); }
-.md-typeset a:is(.strio-tutorial, .coopr-tutorial) { gap: .2rem; color: var(--md-default-fg-color); background: transparent; border-color: color-mix(in srgb, var(--md-default-fg-color) 20%, transparent); text-decoration: none; }
-:is(.strio-tutorial, .coopr-tutorial) > strong { font-weight: 600; }
-:is(.strio-tutorial, .coopr-tutorial) > span { color: var(--md-default-fg-color--light); }
-:is(.strio-tutorial, .coopr-tutorial) > :is(.strio-tutorial__action, .coopr-tutorial__action) { display: flex; align-items: center; gap: .3rem; margin-top: .4rem; color: inherit; font-size: .7rem; font-weight: 500; text-decoration: underline; text-underline-offset: .15em; }
-:is(.strio-container-link, .coopr-container-link)::after { content: ""; flex-shrink: 0; width: .8rem; height: .8rem; background: currentColor; -webkit-mask: var(--strio-chevron-right-icon) center / contain no-repeat; mask: var(--strio-chevron-right-icon) center / contain no-repeat; }
-:is(.strio-tutorial__action, .coopr-tutorial__action)::after { content: ""; flex-shrink: 0; width: .8rem; height: .8rem; background: currentColor; -webkit-mask: var(--strio-arrow-right-icon) center / contain no-repeat; mask: var(--strio-arrow-right-icon) center / contain no-repeat; }
-.md-typeset a:is(.strio-tutorial, .coopr-tutorial):hover { background: var(--strio-button-muted-bg); border-color: var(--strio-button-ring); }
-.md-typeset a:is(.strio-tutorial, .coopr-tutorial):focus-visible { outline: 2px solid var(--strio-button-ring); outline-offset: 2px; }
-@media (max-width: 600px) { :is(.strio-paths, .coopr-paths) { grid-template-columns: 1fr; } }
+.md-typeset .md-button.strio-container-link { min-height: 1.6rem; gap: .2rem; padding: 0 .4rem 0 .6rem; border: 1px solid color-mix(in srgb, var(--md-default-fg-color) 20%, transparent); background: transparent; }
+.md-typeset .md-button.strio-container-link:hover { background: var(--strio-button-muted-bg); }
+.md-typeset a.strio-tutorial { gap: .2rem; color: var(--md-default-fg-color); background: transparent; border-color: color-mix(in srgb, var(--md-default-fg-color) 20%, transparent); text-decoration: none; }
+.strio-tutorial > strong { font-weight: 600; }
+.strio-tutorial > span { color: var(--md-default-fg-color--light); }
+.strio-tutorial > .strio-tutorial__action { display: flex; align-items: center; gap: .3rem; margin-top: .4rem; color: inherit; font-size: .7rem; font-weight: 500; text-decoration: underline; text-underline-offset: .15em; }
+.strio-container-link::after { content: ""; flex-shrink: 0; width: .8rem; height: .8rem; background: currentColor; -webkit-mask: var(--strio-chevron-right-icon) center / contain no-repeat; mask: var(--strio-chevron-right-icon) center / contain no-repeat; }
+.strio-tutorial__action::after { content: ""; flex-shrink: 0; width: .8rem; height: .8rem; background: currentColor; -webkit-mask: var(--strio-arrow-right-icon) center / contain no-repeat; mask: var(--strio-arrow-right-icon) center / contain no-repeat; }
+.md-typeset a.strio-tutorial:hover { background: var(--strio-button-muted-bg); border-color: var(--strio-button-ring); }
+.md-typeset a.strio-tutorial:focus-visible { outline: 2px solid var(--strio-button-ring); outline-offset: 2px; }
+@media (max-width: 600px) { .strio-paths { grid-template-columns: 1fr; } }
 
 /* Keep standalone code blocks within the article gutters on mobile. */
 @media screen and (max-width: 44.984375em) {
@@ -278,6 +277,7 @@
 .strio-footer { border-top: 0; background: var(--md-default-bg-color); }
 .strio-footer__navigation { width: 100%; max-width: 61rem; box-sizing: border-box; margin-inline: auto; padding-inline: 1rem; }
 .strio-footer .md-footer__inner { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; width: 100%; max-width: none; margin: 0; padding: 16px 0; border-top: 1px solid var(--md-default-fg-color--lightest); overflow: visible; }
+.strio-footer .md-footer__inner[hidden] { display: none; }
 .strio-footer .md-footer__link { min-width: 0; min-height: 44px; max-width: none; margin: 0; align-items: center; gap: 8px; overflow: visible; }
 .strio-footer .md-footer__link--prev { grid-column: 1; }
 .strio-footer .md-footer__link--next { grid-column: 2; }

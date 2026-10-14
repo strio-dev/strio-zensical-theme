@@ -23,7 +23,7 @@
         "aarch64-linux"
       ];
       perSystem =
-        { pkgs, config, ... }:
+        { pkgs, ... }:
         let
           theme = pkgs.callPackage ./nix/package.nix { };
           upstream = pkgs.callPackage ./nix/zensical.nix { };
@@ -47,6 +47,8 @@
               chmod -R u+w "$work"
               cp -r ${theme}/share/strio-zensical-theme/assets/. "$work/docs/"
               cp -r ${theme}/share/strio-zensical-theme/overrides "$work/overrides"
+              mkdir -p "$work/docs/licenses/strio"
+              cp ${theme}/share/strio-zensical-theme/{LICENSE,licenses/*} "$work/docs/licenses/strio/"
               chmod -R u+w "$work"
               cd "$work"
               zensical serve --dev-addr 127.0.0.1:8000
@@ -74,8 +76,11 @@
               test -s ${theme}/share/strio-zensical-theme/assets/javascripts/toc.js
               test -s ${theme}/share/strio-zensical-theme/overrides/main.html
               test -s ${theme}/share/strio-zensical-theme/overrides/404.html
+              test -s ${theme}/share/strio-zensical-theme/overrides/partials/footer.html
+              test -s ${theme}/share/strio-zensical-theme/overrides/.icons/strio/wordmark.svg
               test -s ${theme}/share/strio-zensical-theme/LICENSE
-              test -s ${theme}/share/strio-zensical-theme/NOTICE
+              test -s ${theme}/share/strio-zensical-theme/licenses/Upstream-MIT.txt
+              test -s ${theme}/share/strio-zensical-theme/licenses/Zensical-MIT.txt
               mkdir "$out"
             '';
           };

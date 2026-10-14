@@ -16,6 +16,8 @@ Add `zensical` to `nativeBuildInputs`. In the Nix builder, copy the shared files
 ```sh
 cp -r ${theme}/share/strio-zensical-theme/assets/. docs/
 cp -r ${theme}/share/strio-zensical-theme/overrides .
+mkdir -p docs/licenses/strio
+cp ${theme}/share/strio-zensical-theme/{LICENSE,licenses/*} docs/licenses/strio/
 zensical build --clean --strict
 ```
 
@@ -27,4 +29,4 @@ nix run .#preview          # http://127.0.0.1:8000
 nix flake check
 ```
 
-[MIT License](LICENSE); attribution in [NOTICE](NOTICE).
+[MIT License](LICENSE); included notices in [theme/licenses](theme/licenses).
