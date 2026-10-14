@@ -2,6 +2,8 @@
 
 `nix build .#example .#checks.x86_64-linux.contents` checks the strict example build, package files, local links, anchors, assets and licenses.
 
+`nix build .#checks.x86_64-linux.scoped-preview` checks optional preview source allowlists in isolated temporary projects: excluded private/build paths, symlink boundaries, required inputs, staging updates, live Markdown saves, file creation/deletion and atomic config replacement. It also gates watch installation to verify saves during startup and directory replacement, and checks initialization failures. It uses the real staging helper and inotify watcher with a small server fixture; it does not open or watch the caller's workspace.
+
 For keyboard, reading and native-search checks, create an isolated fixture:
 
 ```sh

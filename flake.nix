@@ -65,6 +65,37 @@
             system = pkgs.stdenv.hostPlatform.system;
             siteUrl = "https://example.com/acme/";
           };
+          previewFixture = pkgs.callPackage ./nix/preview.nix {
+            inherit theme;
+            inotify-tools = pkgs.writeShellScriptBin "inotifywait" ''
+              if [[ -n "''${PREVIEW_WATCH_FAIL:-}" && " $* " == *" --recursive "* ]]; then
+                echo "Simulated watch installation failure" >&2
+                exit 1
+              fi
+              if [[ -n "''${PREVIEW_WATCH_LOG:-}" && " $* " == *" --recursive "* ]]; then
+                printf 'install\n' >> "$PREVIEW_WATCH_LOG"
+                while [[ ! -f "$PREVIEW_WATCH_LOG.release" ]]; do
+                  ${pkgs.coreutils}/bin/sleep 0.01
+                done
+                ${pkgs.coreutils}/bin/rm "$PREVIEW_WATCH_LOG.release"
+              fi
+              exec ${pkgs.inotify-tools}/bin/inotifywait "$@"
+            '';
+            sourcePaths = [
+              "docs"
+              "zensical.toml"
+            ];
+            zensical = pkgs.writeShellScriptBin "zensical" ''
+              while (($#)); do
+                if [[ "$1" == --config-file ]]; then
+                  printf '%s\n' "$2" >> "$PREVIEW_LOG"
+                  break
+                fi
+                shift
+              done
+              exec ${pkgs.coreutils}/bin/sleep infinity
+            '';
+          };
 
         in
         {
@@ -73,6 +104,22 @@
             inherit theme example zensical;
           };
           checks = {
+            scoped-preview =
+              pkgs.runCommand "strio-scoped-preview"
+                {
+                  nativeBuildInputs = [
+                    pkgs.rsync
+                    pkgs.coreutils
+                    (pkgs.python3.withPackages (ps: [ ps.tomli-w ]))
+                  ];
+                  PREPARE = ./nix/prepare.py;
+                  THEME = "${theme}/share/strio-zensical-theme";
+                  PREVIEW = "${previewFixture}/bin/strio-docs-preview";
+                }
+                ''
+                  python3 ${./tests/scoped_preview.py}
+                  mkdir "$out"
+                '';
             example = example;
             pages-example = inputs.self.lib.mkExample {
               system = pkgs.stdenv.hostPlatform.system;

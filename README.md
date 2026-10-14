@@ -40,6 +40,18 @@ nix run .#docs-preview -- --dev-addr 127.0.0.1:8080
 
 This repository uses `nix build .#example` and `nix run .#preview`. The standalone `theme` and `zensical` packages remain available for custom builders.
 
+For docs in a repository root, limit live staging and watching to the documentation inputs:
+
+```nix
+apps.docs-preview = inputs.strio-theme.lib.mkPreview {
+  inherit system;
+  sourceDir = ".";
+  sourcePaths = [ "docs" "zensical.toml" ];
+};
+```
+
+`sourcePaths` is an optional, nonempty list of existing paths relative to `sourceDir`. Include the config, its `docs_dir` and any project `custom_dir`; directories include their contents and newly created files. Only selected inputs are staged and recursively watched. Their parents are watched without recursion to detect atomic replacements, and unrelated parent events are ignored. Preview waits for watch installation before staging and serving, and retains established watches through ordinary saves. Private directories such as `.omx` and build-result links stay outside the preview. Entries must be plain relative paths without `..`, glob characters or control separators. Scoped previews accept file symlinks only when their targets are also selected; directory symlinks are rejected. With `sourcePaths` omitted, the whole documentation source is staged and watched as before.
+
 [Browser verification](tests/README.md) covers keyboard controls, reading styles and native-search regressions.
 
 [MIT License](LICENSE); third-party notices in [theme/licenses](theme/licenses).
