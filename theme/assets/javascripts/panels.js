@@ -67,7 +67,7 @@
     }
   }
 
-  // Keep the native contents control clear of footer branding and actions.
+  // Reserve footer clearance once so the native contents control stays still.
   function updateFooterClearance() {
     footerFrame = 0;
     const panel = panels.find(item => item.kind === "toc");
@@ -80,7 +80,7 @@
     }
     const trigger = panel.trigger.getBoundingClientRect();
     const brand = document.querySelector(".strio-footer__brandbar")?.getBoundingClientRect();
-    let boundary = brand?.height ? brand.top : innerHeight + 5;
+    let boundary = brand?.height ? brand.top : Number.POSITIVE_INFINITY;
     for (const link of document.querySelectorAll(".strio-pagination:not([hidden]) .md-footer__link")) {
       const bounds = link.getBoundingClientRect();
       if (bounds.width && bounds.height && bounds.bottom > 0 &&
@@ -88,7 +88,12 @@
         boundary = Math.min(boundary, bounds.top);
       }
     }
-    const offset = Math.max(0, innerHeight - boundary + 5);
+    // Use document coordinates rather than following the footer each scroll.
+    // This is the clearance needed at page end, held throughout the page.
+    const hasFooter = Number.isFinite(boundary);
+    const offset = hasFooter
+      ? Math.max(0, document.documentElement.scrollHeight - (boundary + scrollY) + 5)
+      : 0;
     const headerBottom = document.querySelector(".md-header")?.getBoundingClientRect().bottom || 0;
     // Preserve the native 54px anchor unless the popup would clip the header.
     const popupBottom = Math.min(54, innerHeight - Math.max(32, offset) - headerBottom - 8 - panel.content.offsetHeight);

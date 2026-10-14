@@ -74,7 +74,7 @@ async function checkFocus(page, link, colorScheme) {
         assert.equal(metrics.brandPaddingTop, '10px'); assert.equal(metrics.brandPaddingBottom, '10px');
         assert.equal(metrics.brandBorder, '1px'); assert.equal(metrics.outerBorder, '0px');
         assert.equal(metrics.brandWidth, metrics.footerWidth); assert.equal(metrics.footerWidth, metrics.containerWidth);
-        assert.equal(metrics.brandHeight, 65); assert.equal(metrics.brandLogoWidth, 56);
+        assert.equal(metrics.brandHeight, 65); assert.equal(metrics.brandLogoWidth, 72);
         assert(Math.abs(metrics.navWidth - metrics.articleWidth) < 1); assert(Math.abs(metrics.navX - metrics.articleX) < 1);
         assert(!metrics.overflow); assert.equal(metrics.brandBackground, 'rgba(0, 0, 0, 0)');
         assert.equal(await page.locator('.strio-footer__brandbar a').count(), 1);

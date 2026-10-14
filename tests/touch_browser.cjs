@@ -82,8 +82,9 @@ async function footerClearance(page) {
     const footer = document.querySelector(".strio-footer__brandbar");
     const maximum = document.scrollingElement.scrollHeight - innerHeight;
     const top = footer.getBoundingClientRect().top + scrollY;
-    return [innerHeight + 120, innerHeight + 40, innerHeight, innerHeight - 32]
+    const toward = [innerHeight + 120, innerHeight + 40, innerHeight, innerHeight - 32]
       .map(target => Math.max(0, Math.min(maximum, top - target))).concat(maximum);
+    return [0, ...toward, ...toward.toReversed(), 0];
   });
   const samples = [];
   for (const position of positions) {
@@ -102,11 +103,20 @@ async function footerClearance(page) {
       };
     });
     assert.equal(sample.toc.width, 38); assert.equal(sample.toc.height, 38);
+    if (samples.length) assert(Math.abs(sample.toc.top - samples[0].toc.top) < .01,
+      'Contents control moves while scrolling toward or away from footer');
     assert(sample.toc.bottom <= sample.brand.top - 4.99, 'Contents control crosses footer divider');
     noOverlap([{ text: 'contents', rect: sample.toc }, ...sample.actions], 'Contents/footer actions');
     samples.push(sample);
   }
-  await page.evaluateasync function shortViewportPopup(page) {
+  await page.evaluate(async () => {
+    scrollTo(0, 0);
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  });
+  return samples;
+}
+
+async function shortViewportPopup(page) {
   await page.setViewportSize({ width: 390, height: 320 });
   await page.evaluate(async () => {
     scrollTo(0, document.scrollingElement.scrollHeight);
@@ -141,13 +151,6 @@ async function footerClearance(page) {
   await page.waitForFunction(() => !document.querySelector('.md-sidebar--secondary')
     .style.getPropertyValue('--strio-toc-popup-bottom'));
   return state;
-}
-
-(async () => {
-    scrollTo(0, 0);
-    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
-  });
-  return samples;
 }
 
 (async () => {
@@ -203,7 +206,8 @@ async function footerClearance(page) {
         result.tocTrigger = await measure(page, '[data-strio-panel-trigger="toc"]');
         assert(result.tocTrigger.every(item => item.rect.width === 38 && item.rect.height === 38), 'Native contents trigger changed size');
         const nativeAnchor = await page.locator('.md-sidebar--secondary').evaluate(element => ({ bottom: getComputedStyle(element).bottom, right: getComputedStyle(element).right }));
-        assert.deepEqual(nativeAnchor, { bottom: '32px', right: '16px' }, 'Native contents placement changed');
+        assert.equal(nativeAnchor.right, '16px', 'Native contents horizontal placement changed');
+        assert(parseFloat(nativeAnchor.bottom) >= 32, 'Contents control lost its minimum viewport inset');
         const close = await keyboardPanel(page, 'toc');
         result.toc = await measure(page, '.md-sidebar--secondary a.md-nav__link, .md-sidebar--secondary .strio-panel-close');
         targetSize(result.toc, 'TOC'); noOverlap(result.toc, 'TOC');
@@ -222,8 +226,16 @@ async function footerClearance(page) {
         await page.waitForFunction(() => document.querySelector('#__toc').checked);
         const popup = await page.locator('.md-sidebar--secondary .md-sidebar__inner').evaluate(element => ({ width: getComputedStyle(element).width, bottom: getComputedStyle(element).bottom }));
         assert.deepEqual(popup, { width: '234px', bottom: '54px' }, 'Native contents popup anchors changed');
+        assert.equal(await page.locator('.md-sidebar--secondary .md-sidebar__inner')
+          .evaluate(element => getComputedStyle(element).transform), 'none', 'Contents popup slides on opening');
         await page.locator('[data-strio-panel-close="toc"]').click();
         await page.waitForFunction(() => !document.querySelector('#__toc').checked);
+        await page.emulateMedia({ reducedMotion: 'reduce' });
+        const reducedClose = await keyboardPanel(page, 'toc');
+        assert.equal(await page.locator('.md-sidebar--secondary .md-sidebar__inner')
+          .evaluate(element => getComputedStyle(element).transitionDuration), '0s', 'Reduced-motion contents popup animates');
+        await reducedClose();
+        await page.emulateMedia({ reducedMotion: 'no-preference' });
         await page.setViewportSize({ width: 1440, height: 900 });
         await page.waitForFunction(() => document.querySelector('[data-strio-panel-trigger="toc"]').tabIndex === -1);
         await page.setViewportSize({ width, height: 900 });
@@ -246,6 +258,12 @@ async function footerClearance(page) {
         }
         if (colorScheme === 'dark') result.shortViewportPopup = await shortViewportPopup(page);
       }
+      const brand = await page.locator('.strio-footer__brandbar').evaluate(element => ({
+        height: element.getBoundingClientRect().height,
+        logoWidth: element.querySelector('.strio-footer-brand svg').getBoundingClientRect().width,
+        targetHeight: element.querySelector('.strio-footer-brand').getBoundingClientRect().height,
+      }));
+      assert.deepEqual(brand, { height: 65, logoWidth: 72, targetHeight: 44 }, 'Footer logo changed compact row or target geometry');
       result.copy = await measure(page, '.md-code__button');
       if (touch) targetSize(result.copy, 'copy');
       else assert(result.copy.every(item => item.rect.width === 28 && item.rect.height === 28), 'Desktop clipboard changed');
