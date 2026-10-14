@@ -1,0 +1,49 @@
+[project]
+extra_css = ["stylesheets/strio.css", "stylesheets/palette.css"]
+extra_javascript = ["javascripts/copy.js", "javascripts/toc.js", "javascripts/panels.js"]
+
+[project.extra]
+generator = false
+strio_accent = "#9D6B35"
+
+[project.theme]
+variant = "modern"
+custom_dir = "overrides"
+language = "en"
+font = false
+features = [
+  "navigation.instant",
+  "navigation.instant.progress",
+  "navigation.sections",
+  "navigation.path",
+  "navigation.footer",
+  "search.highlight",
+]
+
+[project.theme.icon]
+repo = "fontawesome/brands/github"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: light)"
+scheme = "default"
+primary = "black"
+accent = "grey"
+toggle.icon = "lucide/sun"
+toggle.name = "Switch to dark mode"
+
+[[project.theme.palette]]
+media = "(prefers-color-scheme: dark)"
+scheme = "slate"
+primary = "black"
+accent = "grey"
+toggle.icon = "lucide/moon"
+toggle.name = "Switch to light mode"
+
+[project.markdown_extensions]
+strio_copy = {}
+attr_list = {}
+md_in_html = {}
+"pymdownx.highlight" = { anchor_linenums = true, pygments_lang_class = true }
+"pymdownx.superfences" = { custom_fences = [{ name = "kdl", class = "highlight", format = "strio_highlight.format" }] }
+"pymdownx.tabbed" = { alternate_style = true }
+toc = { permalink = "#" }

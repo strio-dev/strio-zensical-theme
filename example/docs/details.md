@@ -6,8 +6,8 @@
 
 | Mode | Palette |
 | --- | --- |
-| Light | Monochrome |
-| Dark | Slate |
+| Light | Shared light |
+| Dark | Shared dark |
 
 ## Focus
 

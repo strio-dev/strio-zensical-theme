@@ -65,7 +65,7 @@ async function checkCopy(page, button, expected) {
       assert(await tabs.locator('.tabbed-block').nth(1).isVisible());
       assert(!(await tabs.locator('.tabbed-block').first().isVisible()));
 
-      if (width === 390) await page.locator('.md-sidebar-button[for="__toc"]').click();
+      if (width === 390) await page.locator('[data-strio-panel-trigger="toc"]').click();
       const tableTarget = page.locator('.md-sidebar--secondary a[href$="#tables"]');
       await tableTarget.click();
       await page.waitForFunction(() => document.querySelector('.md-sidebar--secondary a[href$="#tables"]')?.getAttribute('aria-current') === 'location');
