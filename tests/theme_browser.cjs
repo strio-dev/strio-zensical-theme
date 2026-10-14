@@ -109,10 +109,22 @@ async function panelsCheck(page) {
       assert.equal(await closed.evaluate(el => el.inert), true, `${id}: dismissed panel remains focusable`);
     }
     await trigger.click();
-    const close=closed.locator('.strio-panel-close');
-    await page.waitForFunction(id=>{const el=document.querySelector(`#strio-${id.slice(2)}-panel .strio-panel-close`);if(!el)return false;const r=el.getBoundingClientRect();const target=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return r.width>0&&r.height>0&&(target===el||el.contains(target));},id);
-    assert(await close.evaluate(el=>{const r=el.getBoundingClientRect();const target=document.elementFromPoint(r.x+r.width/2,r.y+r.height/2);return r.width>0&&r.height>0&&(target===el||el.contains(target));}),`${id}: pointer Close is covered or outside the viewport`);
-    await close.click();
+    if (id === '__drawer') {
+      assert.equal(await closed.locator('.strio-panel-close').count(), 0, 'Drawer injected an extra Close control');
+      const label = closed.locator('.md-nav--primary > .md-nav__title[for="__drawer"]');
+      const bounds = await label.boundingBox();
+      await label.click({ position: { x: bounds.width - 12, y: bounds.height / 2 } });
+    } else {
+      const close = closed.locator('.strio-panel-close');
+      await page.waitForFunction(id => {
+        const element = document.querySelector(`#strio-${id.slice(2)}-panel .strio-panel-close`);
+        if (!element) return false;
+        const bounds = element.getBoundingClientRect();
+        const target = document.elementFromPoint(bounds.x + bounds.width / 2, bounds.y + bounds.height / 2);
+        return bounds.width > 0 && bounds.height > 0 && (target === element || element.contains(target));
+      }, id);
+      await close.click();
+    }
     await page.waitForFunction(id => !document.getElementById(id).checked,id);
     assert(await trigger.evaluate(el=>document.activeElement===el),`${id}: pointer Close did not restore focus`);
   }

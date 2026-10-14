@@ -8,20 +8,6 @@ body[data-md-color-scheme] {
   --strio-palette-success: #258374;
   --strio-palette-warning: #9D6B35;
   --strio-palette-danger: #BB5560;
-  --strio-palette-code-text: var(--strio-palette-border-strong);
-  --strio-palette-code-keyword: var(--strio-palette-danger);
-  --strio-palette-code-string: var(--strio-palette-success);
-  --strio-palette-code-number: var(--strio-palette-warning);
-  --strio-palette-code-constant: var(--strio-palette-warning);
-  --strio-palette-code-function: #816BA6;
-  --strio-palette-code-name: var(--strio-palette-warning);
-  --strio-palette-code-variable: var(--strio-palette-border-strong);
-  --strio-palette-code-special: #4876BA;
-  --strio-palette-code-operator: var(--strio-palette-danger);
-  --strio-palette-code-punctuation: var(--strio-palette-border-strong);
-  --strio-palette-code-comment: var(--strio-palette-border-strong);
-  --strio-palette-code-generic: var(--strio-palette-border-strong);
-  --strio-palette-code-error: var(--strio-palette-danger);
   --strio-palette-selection-background: var(--strio-palette-accent);
   --strio-palette-selection-text: var(--strio-palette-accent-on);
   --strio-palette-link-decoration: var(--strio-palette-accent);
@@ -33,7 +19,22 @@ body[data-md-color-scheme="default"] {
   --strio-palette-text: #222623;
   --strio-palette-text-muted: #5C625F;
   --strio-palette-border: #D8DCDA;
-  --strio-palette-code-surface: #FFFFFF;
+  /* Coopr's subtle surface; GitHub-inspired syntax shades meet 5:1. */
+  --strio-palette-code-surface: #F8F8F8;
+  --strio-palette-code-text: #1F2328;
+  --strio-palette-code-keyword: #B34753;
+  --strio-palette-code-string: #22776A;
+  --strio-palette-code-number: #8F6130;
+  --strio-palette-code-constant: #8F6130;
+  --strio-palette-code-function: #775F9F;
+  --strio-palette-code-name: #8F6130;
+  --strio-palette-code-variable: #1F2328;
+  --strio-palette-code-special: #416BAB;
+  --strio-palette-code-operator: #B34753;
+  --strio-palette-code-punctuation: #1F2328;
+  --strio-palette-code-comment: #636C76;
+  --strio-palette-code-generic: #1F2328;
+  --strio-palette-code-error: #B34753;
   --strio-palette-link-text: var(--strio-palette-text);
 }
 
@@ -43,7 +44,22 @@ body[data-md-color-scheme="slate"] {
   --strio-palette-text: #E7ECE8;
   --strio-palette-text-muted: #B8BEBA;
   --strio-palette-border: #3C403D;
-  --strio-palette-code-surface: #000000;
+  /* Coopr's raised surface; softer Vesper-inspired syntax shades meet 7:1. */
+  --strio-palette-code-surface: #202020;
+  --strio-palette-code-text: #E7ECE8;
+  --strio-palette-code-keyword: #D79AA1;
+  --strio-palette-code-string: #36BEA8;
+  --strio-palette-code-number: #CFA270;
+  --strio-palette-code-constant: #CFA270;
+  --strio-palette-code-function: #B2A4C8;
+  --strio-palette-code-name: #CFA270;
+  --strio-palette-code-variable: #E7ECE8;
+  --strio-palette-code-special: #8FACD5;
+  --strio-palette-code-operator: #D79AA1;
+  --strio-palette-code-punctuation: #E7ECE8;
+  --strio-palette-code-comment: #8B8B8B;
+  --strio-palette-code-generic: #E7ECE8;
+  --strio-palette-code-error: #D79AA1;
   --strio-palette-link-text: var(--strio-palette-text);
 }
 
@@ -58,8 +74,6 @@ body[data-md-color-scheme] :is(.md-content, .md-sidebar--primary, .md-sidebar--s
   --md-typeset-a-color: var(--strio-palette-link-text);
   --md-code-fg-color: var(--strio-palette-code-text);
   --md-code-bg-color: var(--strio-palette-code-surface);
-  --md-code-bg-color--light: var(--strio-palette-code-surface);
-  --md-code-bg-color--lighter: var(--strio-palette-code-surface);
   --md-code-hl-keyword-color: var(--strio-palette-code-keyword);
   --md-code-hl-string-color: var(--strio-palette-code-string);
   --md-code-hl-number-color: var(--strio-palette-code-number);
@@ -73,7 +87,6 @@ body[data-md-color-scheme] :is(.md-content, .md-sidebar--primary, .md-sidebar--s
   --md-code-hl-comment-color: var(--strio-palette-code-comment);
   --md-code-hl-generic-color: var(--strio-palette-code-generic);
   --md-code-hl-error-color: var(--strio-palette-code-error);
-  --strio-surface-ring: var(--strio-palette-border);
   --strio-button-bg: var(--strio-palette-accent);
   --strio-button-fg: var(--strio-palette-accent-on);
   --strio-button-muted-bg: var(--strio-palette-surface-raised);
@@ -82,6 +95,10 @@ body[data-md-color-scheme] :is(.md-content, .md-sidebar--primary, .md-sidebar--s
   --strio-control-focus: var(--strio-palette-focus);
   color: var(--strio-palette-text);
 }
+/* Content borders use the palette; popup frames retain the shared soft ring. */
+body[data-md-color-scheme] .md-content {
+  --strio-surface-ring: var(--strio-palette-border);
+}
 body[data-md-color-scheme] .md-sidebar--primary .md-nav--primary {
   --md-default-fg-color: var(--strio-palette-text);
   --md-default-fg-color--lightest: var(--strio-palette-surface-raised);
@@ -89,7 +106,7 @@ body[data-md-color-scheme] .md-sidebar--primary .md-nav--primary {
   --md-accent-fg-color--transparent: var(--strio-palette-surface-raised);
 }
 body[data-md-color-scheme] .md-content .md-typeset { --md-typeset-a-color: var(--strio-palette-link-text); }
-body[data-md-color-scheme] .md-content a:not(.md-button, .headerlink, .strio-tutorial) {
+body[data-md-color-scheme] .md-content a:not(.md-button, .headerlink, .strio-tutorial, .md-footer__link, .md-path__link, .md-nav__link) {
   color: var(--strio-palette-link-text);
   text-decoration-color: var(--strio-palette-link-decoration);
 }
@@ -113,18 +130,6 @@ body[data-md-color-scheme] :is(.md-content, .md-sidebar--primary, .md-sidebar--s
   color: var(--strio-palette-selection-text);
 }
 
-/* Neutral text stays readable; the project hue identifies current navigation. */
-body[data-md-color-scheme] .md-sidebar--primary .md-nav__link--active,
-body[data-md-color-scheme] .md-sidebar--secondary .md-nav__link[aria-current],
-body[data-md-color-scheme] .md-sidebar--secondary .md-nav--secondary:not([data-strio-toc-adjusted]) .md-nav__link--active {
-  color: var(--strio-palette-text);
-  box-shadow: inset 3px 0 0 var(--strio-palette-accent);
-}
-[dir="rtl"] body[data-md-color-scheme] .md-sidebar--primary .md-nav__link--active,
-[dir="rtl"] body[data-md-color-scheme] .md-sidebar--secondary .md-nav__link[aria-current],
-[dir="rtl"] body[data-md-color-scheme] .md-sidebar--secondary .md-nav--secondary:not([data-strio-toc-adjusted]) .md-nav__link--active {
-  box-shadow: inset -3px 0 0 var(--strio-palette-accent);
-}
 body[data-md-color-scheme] .md-content .tabbed-set { --md-accent-fg-color: var(--strio-palette-text); }
 body[data-md-color-scheme] .md-content .tabbed-labels::before { background: var(--strio-palette-accent); }
 body[data-md-color-scheme] :is(.md-header__option, .md-header .md-source, .md-header__button.md-icon:not([for="__search"])) { --strio-control-focus: var(--strio-palette-focus); }

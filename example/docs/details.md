@@ -1,7 +1,5 @@
 # Details
 
-[Overview](index.md)
-
 ## Table
 
 | Mode | Palette |

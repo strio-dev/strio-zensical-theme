@@ -3,6 +3,7 @@
   const drawerMedia = matchMedia("(max-width: 76.234375em)");
   const tocMedia = matchMedia("(max-width: 59.984375em)");
   let panels = [];
+  let footerFrame = 0;
 
   // Embedded shadow components own their events, including native search.
   function inForeignComponent(event) {
@@ -42,8 +43,9 @@
     panel.content.inert = compact && !panel.open;
     panel.trigger.tabIndex = compact ? 0 : -1;
     panel.trigger.setAttribute("aria-expanded", String(panel.open));
-    panel.close.hidden = !compact;
+    if (panel.close) panel.close.hidden = !compact;
     if (panel.open) requestAnimationFrame(() => revealCurrent(panel));
+    if (panel.kind === "toc") queueFooterClearance();
   }
 
   function setOpen(panel, open, { keyboard = false, restore = false } = {}) {
@@ -57,11 +59,52 @@
     panel.toggle.dispatchEvent(new Event("change", { bubbles: true }));
     sync(panel);
     if (open && keyboard) {
-      const target = panel.kind === "toc" ? revealCurrent(panel) : null;
-      (target || panel.close).focus({ preventScroll: true });
+      const target = panel.kind === "toc" ? revealCurrent(panel)
+        : panel.content.querySelector('.md-nav--primary a.md-nav__link:not(.md-nav__container)');
+      (target || panel.close || panel.trigger).focus({ preventScroll: true });
     } else if (!open && restore) {
       panel.trigger.focus({ preventScroll: true });
     }
+  }
+
+  // Keep the native contents control clear of footer branding and actions.
+  function updateFooterClearance() {
+    footerFrame = 0;
+    const panel = panels.find(item => item.kind === "toc");
+    if (!panel) return;
+    if (!tocMedia.matches) {
+      for (const property of ["--strio-toc-footer-offset", "--strio-toc-popup-bottom", "--strio-toc-popup-right"]) {
+        panel.sidebar.style.removeProperty(property);
+      }
+      return;
+    }
+    const trigger = panel.trigger.getBoundingClientRect();
+    const brand = document.querySelector(".strio-footer__brandbar")?.getBoundingClientRect();
+    let boundary = brand?.height ? brand.top : innerHeight + 5;
+    for (const link of document.querySelectorAll(".strio-pagination:not([hidden]) .md-footer__link")) {
+      const bounds = link.getBoundingClientRect();
+      if (bounds.width && bounds.height && bounds.bottom > 0 &&
+          bounds.left < trigger.right && bounds.right > trigger.left) {
+        boundary = Math.min(boundary, bounds.top);
+      }
+    }
+    const offset = Math.max(0, innerHeight - boundary + 5);
+    const headerBottom = document.querySelector(".md-header")?.getBoundingClientRect().bottom || 0;
+    // Preserve the native 54px anchor unless the popup would clip the header.
+    const popupBottom = Math.min(54, innerHeight - Math.max(32, offset) - headerBottom - 8 - panel.content.offsetHeight);
+    panel.sidebar.style.setProperty("--strio-toc-footer-offset", `${offset}px`);
+    if (popupBottom < 54) {
+      panel.sidebar.style.setProperty("--strio-toc-popup-bottom", `${popupBottom}px`);
+      // In short viewports the popup sits beside the trigger, keeping it usable.
+      panel.sidebar.style.setProperty("--strio-toc-popup-right", "54px");
+    } else {
+      panel.sidebar.style.removeProperty("--strio-toc-popup-bottom");
+      panel.sidebar.style.removeProperty("--strio-toc-popup-right");
+    }
+  }
+
+  function queueFooterClearance() {
+    if (!footerFrame) footerFrame = requestAnimationFrame(updateFooterClearance);
   }
 
   function mount() {
@@ -81,21 +124,28 @@
       trigger.setAttribute("aria-label", `Toggle ${label}`);
       trigger.setAttribute("aria-controls", content.id);
       trigger.dataset.strioPanelTrigger = kind;
-      let close = content.querySelector(".strio-panel-close");
-      if (!close) {
-        close = document.createElement("button");
-        close.type = "button";
-        close.className = "strio-panel-close";
-        close.textContent = "Close";
-        content.prepend(close);
+      // The drawer already has a native closing label; it needs no extra UI.
+      let close = null;
+      if (kind === "drawer") {
+        content.querySelector(".strio-panel-close")?.remove();
+      } else {
+        close = content.querySelector(".strio-panel-close");
+        if (!close) {
+          close = document.createElement("button");
+          close.type = "button";
+          close.className = "strio-panel-close";
+          close.textContent = "Close";
+          content.prepend(close);
+        }
+        close.setAttribute("aria-label", `Close ${label}`);
+        close.title = `Close ${label}`;
+        close.dataset.strioPanelClose = kind;
       }
-      close.setAttribute("aria-label", `Close ${label}`);
-      close.title = `Close ${label}`;
-      close.dataset.strioPanelClose = kind;
       const panel = { kind, sidebar, content, trigger, toggle, close, media, open: false };
       panels.push(panel);
       sync(panel);
     }
+    queueFooterClearance();
   }
 
   document.addEventListener("keydown", event => {
@@ -120,7 +170,7 @@
     if (inForeignComponent(event) || !(event.target instanceof Element)) return;
     const trigger = event.target.closest("[data-strio-panel-trigger]");
     const close = event.target.closest("[data-strio-panel-close]");
-    const panel = panels.find(item => item.trigger === trigger || item.close === close);
+    const panel = panels.find(item => (trigger && item.trigger === trigger) || (close && item.close === close));
     if (panel?.media.matches) {
       event.preventDefault();
       setOpen(panel, close ? false : !panel.open, { restore: Boolean(close) });
@@ -159,6 +209,9 @@
       }
     }
   }
+  window.addEventListener("scroll", queueFooterClearance, { passive: true });
+  window.addEventListener("resize", queueFooterClearance);
+  tocMedia.addEventListener("change", queueFooterClearance);
   drawerMedia.addEventListener("change", resize);
   tocMedia.addEventListener("change", resize);
   document$.subscribe(mount);

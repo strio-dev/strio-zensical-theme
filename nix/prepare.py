@@ -1,5 +1,6 @@
 """Stage a project's docs with packaged theme defaults in a separate directory."""
 import argparse
+import hashlib
 import os
 from pathlib import Path
 import shutil
@@ -32,6 +33,26 @@ def project_path(base, value, root):
     if not path.is_relative_to(root) or not path.resolve().is_relative_to(root):
         raise ValueError(f"Project path must stay inside the documentation source: {value}")
     return path
+
+
+
+def fingerprint_assets(project, docs, theme_assets, accent_css):
+    """Version shared URLs by content so new HTML cannot reuse old theme CSS/JS."""
+    assets = {str(path.relative_to(theme_assets)) for path in theme_assets.rglob("*")
+              if path.is_file() and path.suffix in (".css", ".js")}
+    assets.add(accent_css)
+    names = {}
+    for name in sorted(assets):
+        original = docs / name
+        digest = hashlib.sha256(original.read_bytes()).hexdigest()[:12]
+        versioned = original.with_name(f"{original.stem}.{digest}{original.suffix}")
+        if versioned.exists():
+            raise ValueError(f"Shared versioned asset is already in the project source: {versioned.relative_to(docs)}")
+        original.rename(versioned)
+        names[name] = str(versioned.relative_to(docs))
+    for field in ("extra_css", "extra_javascript"):
+        project[field] = [names.get(asset, asset) if isinstance(asset, str) else asset
+                          for asset in project.get(field, [])]
 
 
 def main():
@@ -94,6 +115,7 @@ def main():
     staged_docs = staged / docs.relative_to(source)
     subprocess.run(["rsync", "-rtp", "--chmod=Du+rwx,Fu+rw", f"{args.theme / 'assets'}/", f"{staged_docs}/"], check=True)
     configure(project, staged_docs)
+    fingerprint_assets(project, staged_docs, args.theme / "assets", ACCENT_CSS)
     licenses = staged_docs / "licenses/strio"
     licenses.mkdir(parents=True, exist_ok=True)
     subprocess.run(["rsync", "-rtp", "--chmod=Du+rwx,Fu+rw", f"{args.theme / 'licenses'}/", f"{licenses}/"], check=True)
