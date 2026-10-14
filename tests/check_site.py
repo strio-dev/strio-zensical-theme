@@ -41,3 +41,9 @@ assert "Page not found" in (root / "404.html").read_text()
 assert not (root / "overrides").exists()
 assert not list(root.rglob("*.py"))
 print(f"Checked {len(pages)} HTML pages: local links, anchors, assets, overrides and source isolation")
+
+assert 'aria-label="Strio homepage"' in html
+assert 'href="https://strio.dev"' in html
+assert 'strio-footer__brandbar' in html
+assert 'viewBox="108 148.617 396 110.766"' in html
+assert not (root / "fonts/InterVariable.ttf").exists()

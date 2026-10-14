@@ -3,11 +3,11 @@ Coopr HEAD: 31855a42a5ccc21d739116e7171e034732bb7de2 (working tree had unrelated
 Source: https://github.com/strio-dev/coopr
 CSS, JavaScript and Jinja templates: MIT, copyright 2026 Coopr contributors.
 Changes: shared CSS variables and TOC data attributes renamed coopr -> strio;
-cards use shared strio classes; monochrome logo presentation is an optional Coopr stylesheet.
+Coopr logo layout is a shared default; card classes accept strio and coopr names.
 The accepted Coopr SVGs are copied without modification only into theme/identities/coopr.
 They are project identity assets, not a new Strio logo or a generic consumer logo.
 Source CSS credits Luma radius/navigation treatment and shadcn documentation palettes
-(GitHub Light Default and Vesper); no additional upstream code or font files imported.
+(GitHub Light Default and Vesper); no additional font files imported.
 Template icons are resolved from the installed Zensical Lucide set at build time;
 Zensical retains its own upstream license notices in its package.
 Python Markdown overrides and their tests are also extracted under strio names.
@@ -17,3 +17,11 @@ the approved Acme - 01 Corner.svg source on 2026-10-14.
 Acme SVG SHA-256: db8d58bb698bb4e2c470dca322bc3055c9b5abeb568381e47333b2bc89695775
 Light/dark adaptation uses CSS inversion of the exact approved outlines.
 The Acme identity is under example/docs only and excluded from the shared package.
+
+Shared footer: the approved Strio wordmark is copied byte-for-byte from the
+owner-supplied homepage asset. SHA-256:
+c31a2af68f963ca8b28e6b75a9ed79f051b3b07c3a54bbaddc561a67c02c987a.
+The footer retains native Zensical 0.0.63 navigation markup and an original-template
+fallback under MIT, copyright 2025-2026 Zensical and contributors. Its complete
+license is included at licenses/Zensical-MIT.txt. Apollo's article/site footer
+separation is a visual reference only; no Apollo code or assets are imported.

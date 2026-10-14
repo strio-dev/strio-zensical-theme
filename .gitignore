@@ -2,3 +2,5 @@
 /.preview/
 /site/
 /.direnv/
+__pycache__/
+*.py[cod]
