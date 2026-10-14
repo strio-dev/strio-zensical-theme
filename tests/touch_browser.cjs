@@ -77,6 +77,79 @@ async function keyboardPanel(page, kind) {
   };
 }
 
+async function footerClearance(page) {
+  const positions = await page.evaluate(() => {
+    const footer = document.querySelector(".strio-footer__brandbar");
+    const maximum = document.scrollingElement.scrollHeight - innerHeight;
+    const top = footer.getBoundingClientRect().top + scrollY;
+    return [innerHeight + 120, innerHeight + 40, innerHeight, innerHeight - 32]
+      .map(target => Math.max(0, Math.min(maximum, top - target))).concat(maximum);
+  });
+  const samples = [];
+  for (const position of positions) {
+    await page.evaluate(async top => {
+      scrollTo(0, top);
+      await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+    }, position);
+    const sample = await page.evaluate(() => {
+      const rect = selector => document.querySelector(selector).getBoundingClientRect().toJSON();
+      return {
+        scroll: scrollY,
+        toc: rect('[data-strio-panel-trigger="toc"]'),
+        brand: rect('.strio-footer__brandbar'),
+        actions: [...document.querySelectorAll('.strio-pagination:not([hidden]) .md-footer__link')]
+          .map(element => ({ text: element.textContent.trim(), rect: element.getBoundingClientRect().toJSON() })),
+      };
+    });
+    assert.equal(sample.toc.width, 38); assert.equal(sample.toc.height, 38);
+    assert(sample.toc.bottom <= sample.brand.top - 4.99, 'Contents control crosses footer divider');
+    noOverlap([{ text: 'contents', rect: sample.toc }, ...sample.actions], 'Contents/footer actions');
+    samples.push(sample);
+  }
+  await page.evaluateasync function shortViewportPopup(page) {
+  await page.setViewportSize({ width: 390, height: 320 });
+  await page.evaluate(async () => {
+    scrollTo(0, document.scrollingElement.scrollHeight);
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  });
+  const close = await keyboardPanel(page, 'toc');
+  const state = await page.evaluate(() => {
+    const popup = document.querySelector('.md-sidebar--secondary .md-sidebar__inner');
+    const trigger = document.querySelector('[data-strio-panel-trigger="toc"]');
+    const button = popup.querySelector('.strio-panel-close');
+    const link = document.activeElement;
+    const hit = element => {
+      const rect = element.getBoundingClientRect();
+      const target = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
+      return element === target || element.contains(target);
+    };
+    return {
+      popup: popup.getBoundingClientRect().toJSON(),
+      headerBottom: document.querySelector('.md-header').getBoundingClientRect().bottom,
+      trigger: trigger.getBoundingClientRect().toJSON(),
+      triggerHit: hit(trigger), closeHit: hit(button),
+      navFocus: link.matches('.md-sidebar--secondary a.md-nav__link'), navHit: hit(link),
+    };
+  });
+  assert(state.popup.top >= state.headerBottom + 7.99 && state.popup.bottom <= 320,
+    'Short-viewport contents popup clips header or viewport');
+  assert(state.popup.left >= 0 && state.popup.right <= 390);
+  assert(state.triggerHit && state.closeHit && state.navFocus && state.navHit,
+    'Short-viewport contents trigger, Close or current link is covered');
+  await close();
+  await page.setViewportSize({ width: 390, height: 900 });
+  await page.waitForFunction(() => !document.querySelector('.md-sidebar--secondary')
+    .style.getPropertyValue('--strio-toc-popup-bottom'));
+  return state;
+}
+
+(async () => {
+    scrollTo(0, 0);
+    await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
+  });
+  return samples;
+}
+
 (async () => {
   const browser = await chromium.launch({
     executablePath: process.env.CHROMIUM || 'chromium', args: ['--no-sandbox'],
@@ -111,8 +184,14 @@ async function keyboardPanel(page, kind) {
       if (width < 1220) {
         const close = await keyboardPanel(page, 'drawer');
         result.drawer = await measure(page, '.md-sidebar--primary a.md-nav__link:not(.md-nav__container), '
-          + '.md-sidebar--primary label.md-nav__link:not(.md-nav__container), '
-          + '.md-sidebar--primary .strio-panel-close, .md-sidebar--primary .md-nav__button.md-logo');
+          + '.md-sidebar--primary label.md-nav__link:not(.md-nav__container)');
+        result.drawerLogo = await measure(page, '.md-sidebar--primary .md-nav__button.md-logo');
+        assert.equal(result.drawerLogo[0].rect.width, 120, 'Drawer wordmark must retain Coopr width');
+        const title = await page.locator('.md-sidebar--primary .md-nav--primary > .md-nav__title[for="__drawer"]')
+          .evaluate(element => ({ padding: getComputedStyle(element).padding, minHeight: getComputedStyle(element).minHeight }));
+        assert.deepEqual(title, { padding: '8px', minHeight: '0px' }, 'Drawer title must retain Coopr spacing');
+        result.drawerLogoNativeSize = true;
+        assert.equal(await page.locator('.md-sidebar--primary .strio-panel-close').count(), 0, 'Drawer injected a Close button');
         result.drawerSource = await measure(page, '.md-sidebar--primary .md-source');
         if (touch) {
           targetSize(result.drawer, 'drawer'); noOverlap(result.drawer, 'drawer');
@@ -160,6 +239,12 @@ async function keyboardPanel(page, kind) {
         assert.equal(await page.locator('.md-header [for="__toc"]').count(), 0, 'Instant navigation added header contents');
         result.nativeFloatingMayOverlap = true;
         await page.goto(home, { waitUntil: 'networkidle' });
+        result.footerClearance = [];
+        for (const footerWidth of [320, width]) {
+          await page.setViewportSize({ width: footerWidth, height: 900 });
+          result.footerClearance.push({ width: footerWidth, samples: await footerClearance(page) });
+        }
+        if (colorScheme === 'dark') result.shortViewportPopup = await shortViewportPopup(page);
       }
       result.copy = await measure(page, '.md-code__button');
       if (touch) targetSize(result.copy, 'copy');

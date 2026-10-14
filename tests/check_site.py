@@ -1,6 +1,8 @@
 """Check generated HTML links, assets, overrides and source isolation."""
 from html.parser import HTMLParser
 from pathlib import Path
+import hashlib
+import re
 import sys
 from urllib.parse import unquote, urlsplit
 
@@ -55,13 +57,24 @@ assert not errors, "\n".join(errors)
 
 html = (root / "index.html").read_text()
 for expected in (
-    "stylesheets/strio.css", "stylesheets/palette.css", "stylesheets/strio-accent.css",
-    "assets/acme-corner.svg", "javascripts/copy.js",
-    "javascripts/toc.js", "javascripts/panels.js", "--strio-code-check-icon", "Acme", "strio-code-",
+    "assets/acme-corner.svg", "--strio-code-check-icon", "Acme", "strio-code-",
     "language-kdl", 'aria-label="Strio homepage"', 'href="https://strio.dev"',
     "strio-footer__brandbar", 'viewBox="108 148.617 396 110.766"',
 ):
     assert expected in html, expected
+# Every shared script/style URL must identify the exact bytes of this build.
+for folder, name, extension in (
+    ("stylesheets", "strio", "css"), ("stylesheets", "palette", "css"),
+    ("stylesheets", "strio-accent", "css"), ("javascripts", "copy", "js"),
+    ("javascripts", "toc", "js"), ("javascripts", "panels", "js"),
+):
+    pattern = re.compile(rf"{folder}/{name}\.([0-9a-f]{{12}})\.{extension}")
+    versions = pattern.findall(html)
+    assert len(versions) == 1, (name, versions)
+    asset = root / f"{folder}/{name}.{versions[0]}.{extension}"
+    assert hashlib.sha256(asset.read_bytes()).hexdigest().startswith(versions[0]), asset
+    assert not (root / f"{folder}/{name}.{extension}").exists(), name
+
 for name in ("LICENSE", "Zensical-MIT.txt"):
     license_text = (root / "licenses/strio" / name).read_text()
     assert "Permission is hereby granted" in license_text, name

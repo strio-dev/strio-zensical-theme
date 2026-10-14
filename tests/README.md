@@ -30,7 +30,7 @@ Run the focused touch checks against the same `--theme` fixture:
 node tests/touch_browser.cjs http://127.0.0.1:8765/
 ```
 
-Four light/dark mobile/desktop states check 44px action, copy and drawer targets, control-group overlap, keyboard activation, code-copy clearance and compact desktop sizes. The pinned native contents trigger retains its 38px size and floating placement; it can overlap scrolling article controls. Native search retains its existing target and is checked separately above.
+Four light/dark mobile/desktop states check 44px action, copy and drawer navigation rows, control-group overlap, keyboard activation, code-copy clearance and compact desktop sizes. The drawer wordmark retains Coopr’s 120px width, intrinsic height and 8px title padding; it is exempt from the 44px target check. The pinned native contents trigger retains its 38px size and floating placement. It rises above footer branding and pagination as those enter the viewport. In short viewports, its existing popup shifts beside the trigger to stay below the header; the normal 54px popup anchor remains unchanged. The floating trigger can overlap other scrolling article controls. Native search retains its existing target and is checked separately above.
 
 For project-accent and shared-syntax checks, build two fresh fixtures and run the self-contained browser driver:
 
@@ -40,4 +40,4 @@ nix develop --command python3 tests/prepare_footer.py --theme --accent '#4876BA'
 node tests/palette_browser.cjs /tmp/strio-palette-amber/site /tmp/strio-palette-blue/site /tmp/strio-palette-results
 ```
 
-The driver serves the fixtures itself and checks light/dark button, link, focus and tab accents, fixed syntax contrast and native-search isolation.
+The driver serves the fixtures itself and checks light/dark button, link, focus and tab accents, mode-specific syntax contrast against rendered block/inline backgrounds, shared hue families across project accents and native-search isolation.

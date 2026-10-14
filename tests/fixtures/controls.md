@@ -48,3 +48,18 @@ Visible illustrative command
 ## Final target
 
 [Return to top](#acme-documentation)
+
+## Syntax and inline code
+
+Inspect `build_config` and `timeout=30` alongside a highlighted example.
+
+```python
+# Keep configuration local and explicit.
+from pathlib import Path
+
+def build_config(enabled: bool = True):
+    return {"name": "acme", "timeout": 30,
+            "root": Path("."), "enabled": enabled}
+
+print(build_config())
+```

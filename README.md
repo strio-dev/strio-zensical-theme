@@ -19,7 +19,7 @@ apps.docs-preview = inputs.strio-theme.lib.mkPreview {
 };
 ```
 
-Keep `zensical.toml`, Markdown and your logo in that source. Adapt [Acme’s config](example/zensical.toml). Theme files are staged automatically outside your source tree. Project settings override defaults; project CSS and scripts follow the shared assets. Set `project.repo_url` and `project.repo_name` to enable the native navbar and drawer repository link.
+Keep `zensical.toml`, Markdown and your logo in that source. Adapt [Acme’s config](example/zensical.toml). Theme files are staged automatically outside your source tree. Shared CSS and JavaScript URLs include a content hash so browsers cannot mix cached theme assets from different releases. Project settings override defaults; project CSS and scripts follow the shared assets. Set `project.repo_url` and `project.repo_name` to enable the native navbar and drawer repository link.
 
 The shared palette uses muted amber for the UI accent. Choose a project hue in `zensical.toml`, as Acme does:
 
@@ -28,7 +28,7 @@ The shared palette uses muted amber for the UI accent. Choose a project hue in `
 strio_accent = "#4876BA"
 ```
 
-Use a six-digit hex color. The build adjusts lightness when needed for contrast in both modes; buttons, link decoration, focus and current navigation use the resulting hue. Syntax colors stay fixed across projects, on white/black code surfaces. Project CSS and scripts load after the generated theme assets.
+Use a six-digit hex color. The build adjusts lightness when needed for contrast in both modes; buttons, link decoration, focus and current navigation use the resulting hue. Syntax hue families stay fixed across projects, with readable mode-specific shades on Coopr’s subtle code surfaces: `#F8F8F8` in light mode and `#202020` in dark mode. Project CSS and scripts load after the generated theme assets.
 
 [Acme’s component examples](example/docs/components.md) show intro text, action groups, information cards, tutorial cards and compact outline links.
 
