@@ -20,6 +20,8 @@ runCommand "strio-theme-example"
     chmod -R u+w source
     cp -r ${theme}/share/strio-zensical-theme/assets/. source/docs/
     cp -r ${theme}/share/strio-zensical-theme/overrides source/overrides
+    mkdir -p source/docs/licenses/strio
+    cp ${theme}/share/strio-zensical-theme/{LICENSE,licenses/*} source/docs/licenses/strio/
     cd source
     export HOME="$TMPDIR"
     python3 -B -m unittest discover -s ${theme}/share/strio-zensical-theme/python -p 'test_*.py'

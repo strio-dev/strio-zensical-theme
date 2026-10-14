@@ -1,5 +1,4 @@
-/* System fonts keep local previews independent of third-party font services.
-   The logo contains the accepted, unmodified Nimbus Sans Bold outlines. */
+/* System fonts keep local previews independent of third-party font services. */
 :root {
   --md-text-font: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   --md-code-font: ui-monospace, "SFMono-Regular", Consolas, "Liberation Mono", monospace;
@@ -70,6 +69,12 @@
   --md-code-hl-comment-color: #8b8b8b;
   --md-code-hl-generic-color: #fff;
 }
+.md-header__button.md-logo img { width: 6.6rem; height: 1.9rem; }
+.md-logo img { filter: none; }
+[data-md-color-scheme="slate"] .md-logo img { filter: invert(1); }
+.md-nav--primary > .md-nav__title[for="__drawer"] { font-size: 0; }
+.md-nav--primary > .md-nav__title[for="__drawer"] .md-logo { width: 6rem; height: auto; }
+.md-nav--primary > .md-nav__title[for="__drawer"] .md-logo img { width: 100%; height: auto; }
 .md-header__title { margin-left: .5rem; }
 .md-typeset h1 { font-weight: 650; letter-spacing: -.035em; }
 .md-typeset h2 { font-weight: 600; letter-spacing: -.02em; }
@@ -192,6 +197,26 @@
 .md-typeset .highlight .nl { color: var(--md-code-hl-name-color); }
 .md-typeset .highlight .na { color: var(--md-code-hl-special-color); }
 .md-typeset .highlight .kc { color: var(--md-code-hl-number-color); }
+.strio-actions { display: flex; flex-wrap: wrap; gap: .6rem; }
+.strio-actions .md-button { padding: .5rem 1.3rem; }
+.strio-intro { font-size: 1.15rem; max-width: 35rem; }
+.strio-paths { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1.5rem 0 2rem; }
+.strio-path { display: flex; flex-direction: column; gap: .8rem; border: 1px solid var(--md-default-fg-color--lightest); border-radius: calc(1.8 * var(--strio-radius)); padding: 1.1rem; }
+.strio-path__title { font-size: 1rem; font-weight: 600; line-height: 1.4; letter-spacing: -.02em; }
+.strio-path p { margin: 0; }
+.strio-path > p:last-child { margin-top: auto; }
+/* Luma small outline button with a trailing icon. */
+.md-typeset .md-button.strio-container-link { min-height: 1.6rem; gap: .2rem; padding: 0 .4rem 0 .6rem; border: 1px solid color-mix(in srgb, var(--md-default-fg-color) 20%, transparent); background: transparent; }
+.md-typeset .md-button.strio-container-link:hover { background: var(--strio-button-muted-bg); }
+.md-typeset a.strio-tutorial { gap: .2rem; color: var(--md-default-fg-color); background: transparent; border-color: color-mix(in srgb, var(--md-default-fg-color) 20%, transparent); text-decoration: none; }
+.strio-tutorial > strong { font-weight: 600; }
+.strio-tutorial > span { color: var(--md-default-fg-color--light); }
+.strio-tutorial > .strio-tutorial__action { display: flex; align-items: center; gap: .3rem; margin-top: .4rem; color: inherit; font-size: .7rem; font-weight: 500; text-decoration: underline; text-underline-offset: .15em; }
+.strio-container-link::after { content: ""; flex-shrink: 0; width: .8rem; height: .8rem; background: currentColor; -webkit-mask: var(--strio-chevron-right-icon) center / contain no-repeat; mask: var(--strio-chevron-right-icon) center / contain no-repeat; }
+.strio-tutorial__action::after { content: ""; flex-shrink: 0; width: .8rem; height: .8rem; background: currentColor; -webkit-mask: var(--strio-arrow-right-icon) center / contain no-repeat; mask: var(--strio-arrow-right-icon) center / contain no-repeat; }
+.md-typeset a.strio-tutorial:hover { background: var(--strio-button-muted-bg); border-color: var(--strio-button-ring); }
+.md-typeset a.strio-tutorial:focus-visible { outline: 2px solid var(--strio-button-ring); outline-offset: 2px; }
+@media (max-width: 600px) { .strio-paths { grid-template-columns: 1fr; } }
 
 /* Keep standalone code blocks within the article gutters on mobile. */
 @media screen and (max-width: 44.984375em) {
@@ -209,6 +234,11 @@
 /* Modern gives slate links a scheme-specific colour; retain the monochrome palette. */
 [data-md-color-scheme="default"] .md-typeset { --md-typeset-a-color: #202020; }
 [data-md-color-scheme="slate"] .md-typeset { --md-typeset-a-color: #e4e4e4; }
+@media (max-width: 76.2344em) {
+  .md-header__button[for="__drawer"] { order: -1; }
+  body .md-header__button.md-logo { display: inline-flex; padding: .2rem; }
+  .md-header__button.md-logo img { width: 4.2rem; height: auto; }
+}
 
 /* Luma mobile navigation uses a side sheet; retain the native translucent surface. */
 @media (max-width: 76.234375em) {
@@ -243,23 +273,30 @@
   .md-sidebar--secondary .md-nav__title { padding: 0; margin: 0 0 .8rem; font-size: .8rem; font-weight: 500; line-height: 1.2rem; }
 }
 
-.strio-actions { display: flex; flex-wrap: wrap; gap: .6rem; }
-.strio-actions .md-button { padding: .5rem 1.3rem; }
-.strio-intro { font-size: 1.15rem; max-width: 35rem; }
-.strio-paths { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; margin: 1.5rem 0 2rem; }
-.strio-path { display: flex; flex-direction: column; gap: .8rem; border: 1px solid var(--md-default-fg-color--lightest); border-radius: calc(1.8 * var(--strio-radius)); padding: 1.1rem; }
-.strio-path__title { font-size: 1rem; font-weight: 600; line-height: 1.4; letter-spacing: -.02em; }
-.strio-path p { margin: 0; }
-.strio-path > p:last-child { margin-top: auto; }
-/* Luma small outline button with a trailing icon. */
-.md-typeset .md-button.strio-container-link { min-height: 1.6rem; gap: .2rem; padding: 0 .4rem 0 .6rem; border: 1px solid color-mix(in srgb, var(--md-default-fg-color) 20%, transparent); background: transparent; }
-.md-typeset .md-button.strio-container-link:hover { background: var(--strio-button-muted-bg); }
-.md-typeset a.strio-tutorial { gap: .2rem; color: var(--md-default-fg-color); background: transparent; border-color: color-mix(in srgb, var(--md-default-fg-color) 20%, transparent); text-decoration: none; }
-.strio-tutorial > strong { font-weight: 600; }
-.strio-tutorial > span { color: var(--md-default-fg-color--light); }
-.strio-tutorial > .strio-tutorial__action { display: flex; align-items: center; gap: .3rem; margin-top: .4rem; color: inherit; font-size: .7rem; font-weight: 500; text-decoration: underline; text-underline-offset: .15em; }
-.strio-container-link::after { content: ""; flex-shrink: 0; width: .8rem; height: .8rem; background: currentColor; -webkit-mask: var(--strio-chevron-right-icon) center / contain no-repeat; mask: var(--strio-chevron-right-icon) center / contain no-repeat; }
-.strio-tutorial__action::after { content: ""; flex-shrink: 0; width: .8rem; height: .8rem; background: currentColor; -webkit-mask: var(--strio-arrow-right-icon) center / contain no-repeat; mask: var(--strio-arrow-right-icon) center / contain no-repeat; }
-.md-typeset a.strio-tutorial:hover { background: var(--strio-button-muted-bg); border-color: var(--strio-button-ring); }
-.md-typeset a.strio-tutorial:focus-visible { outline: 2px solid var(--strio-button-ring); outline-offset: 2px; }
-@media (max-width: 600px) { .strio-paths { grid-template-columns: 1fr; } }
+/* Shared Strio footer: article divider and separate full-width brand divider. */
+.strio-footer { border-top: 0; background: var(--md-default-bg-color); }
+.strio-footer__navigation { width: 100%; max-width: 61rem; box-sizing: border-box; margin-inline: auto; padding-inline: 1rem; }
+.strio-footer .md-footer__inner { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; width: 100%; max-width: none; margin: 0; padding: 16px 0; border-top: 1px solid var(--md-default-fg-color--lightest); overflow: visible; }
+.strio-footer .md-footer__inner[hidden] { display: none; }
+.strio-footer .md-footer__link { min-width: 0; min-height: 44px; max-width: none; margin: 0; align-items: center; gap: 8px; overflow: visible; }
+.strio-footer .md-footer__link--prev { grid-column: 1; }
+.strio-footer .md-footer__link--next { grid-column: 2; }
+.strio-footer .md-footer__title { display: block; min-width: 0; max-width: none; margin: 0; padding: 0; white-space: normal; line-height: 1.25; }
+.strio-footer .md-footer__direction { display: block; line-height: 1.2; }
+.strio-footer .md-ellipsis { white-space: normal; overflow: visible; text-overflow: clip; overflow-wrap: anywhere; }
+.strio-footer .md-footer__button { flex-shrink: 0; width: 32px; height: 32px; box-sizing: border-box; margin: 0; padding: 8px; }
+.strio-footer__brandbar { width: 100%; border-top: 1px solid var(--md-default-fg-color--lightest); background: transparent; }
+.strio-footer__brand-inner { box-sizing: border-box; padding: 10px 1rem; }
+.strio-footer-brand { display: flex; align-items: center; width: fit-content; min-height: 44px; color: var(--md-default-fg-color); }
+.strio-footer-brand svg { display: block; width: 56px; height: auto; }
+.strio-footer a:focus-visible { outline: 2px solid var(--strio-button-ring); outline-offset: 2px; }
+@media (min-width: 76.25em) { .strio-footer__navigation { padding-inline: 13.3rem; } }
+@media (max-width: 600px) { .strio-footer__navigation, .strio-footer__brand-inner { padding-inline: .8rem; } }
+@media (max-width: 360px) {
+  .strio-footer .md-footer__inner { grid-template-columns: minmax(0, 1fr); gap: 8px; }
+  .strio-footer .md-footer__link { grid-column: 1; }
+}
+/* Empty native metadata has no surface when branding is disabled. */
+.md-footer-meta:has(.md-copyright):not(:has(.md-copyright > *, .md-social)) { display: none; }
+/* Keep the floating contents control within the quiet brand row at page end. */
+@media screen and (max-width: 59.984375em) { .md-container:has(.strio-footer) .md-sidebar--secondary { bottom: .4rem; } }

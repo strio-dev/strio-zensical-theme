@@ -1,9 +1,0 @@
-/* Acme example identity only. Approved SVG bytes remain unchanged.
-   CSS inversion reverses the same monochrome outlines for slate surfaces. */
-.md-header__button.md-logo img { width: 5.25rem; height: auto; }
-.md-logo img { filter: none; }
-[data-md-color-scheme="slate"] .md-logo img { filter: invert(1); }
-@media (max-width: 76.2344em) {
-  body .md-header__button.md-logo { display: inline-flex; }
-  .md-header__button.md-logo img { width: 4.2rem; height: auto; }
-}
