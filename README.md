@@ -1,32 +1,45 @@
 # Strio Zensical theme
 
-Shared CSS, scripts and template overrides for Zensical 0.0.63. [Example site](https://strio-dev.github.io/strio-zensical-theme/).
+Shared styling and overrides for Zensical 0.0.63. [Acme example](https://strio-dev.github.io/strio-zensical-theme/).
 
-Add the flake input and select its packages in your docs build:
+Pin the dependency in your flake lock, then pass your documentation source:
 
 ```nix
 inputs.strio-theme.url = "github:strio-dev/strio-zensical-theme";
-# Inside perSystem:
-theme = inputs.strio-theme.packages.${system}.theme;
-zensical = inputs.strio-theme.packages.${system}.zensical;
+# Inside flake-parts perSystem:
+packages.docs = inputs.strio-theme.lib.mkZensicalSite {
+  inherit system;
+  src = ./documentation;
+  # Optional deployment URL, including a Pages subpath:
+  siteUrl = "https://example.com/docs/";
+};
+apps.docs-preview = inputs.strio-theme.lib.mkPreview {
+  inherit system;
+  sourceDir = "documentation";
+};
 ```
 
-Add `zensical` to `nativeBuildInputs`. In the Nix builder, copy the shared files into your writable documentation source:
+Keep `zensical.toml`, Markdown and your logo in that source. Adapt [Acme’s config](example/zensical.toml). Theme files are staged automatically outside your source tree. Project settings override defaults; project CSS and scripts follow the shared assets. Set `project.repo_url` and `project.repo_name` to enable the native navbar and drawer repository link.
+
+The shared palette uses muted amber for the UI accent. Choose a project hue in `zensical.toml`, as Acme does:
+
+```toml
+[project.extra]
+strio_accent = "#4876BA"
+```
+
+Use a six-digit hex color. The build adjusts lightness when needed for contrast in both modes; buttons, link decoration, focus and current navigation use the resulting hue. Syntax colors stay fixed across projects, on white/black code surfaces. Project CSS and scripts load after the generated theme assets.
+
+[Acme’s component examples](example/docs/components.md) show intro text, action groups, information cards, tutorial cards and compact outline links.
 
 ```sh
-cp -r ${theme}/share/strio-zensical-theme/assets/. docs/
-cp -r ${theme}/share/strio-zensical-theme/overrides .
-mkdir -p docs/licenses/strio
-cp ${theme}/share/strio-zensical-theme/{LICENSE,licenses/*} docs/licenses/strio/
-zensical build --clean --strict
+nix build .#docs
+nix run .#docs-preview           # live edits at http://127.0.0.1:8000
+nix run .#docs-preview -- --dev-addr 127.0.0.1:8080
 ```
 
-Adapt [example/zensical.toml](example/zensical.toml) for your project’s logo and content.
+This repository uses `nix build .#example` and `nix run .#preview`. The standalone `theme` and `zensical` packages remain available for custom builders.
 
-```sh
-nix build .#theme .#example
-nix run .#preview          # http://127.0.0.1:8000
-nix flake check
-```
+[Browser verification](tests/README.md) covers keyboard controls, reading styles and native-search regressions.
 
-[MIT License](LICENSE); included notices in [theme/licenses](theme/licenses).
+[MIT License](LICENSE); third-party notices in [theme/licenses](theme/licenses).

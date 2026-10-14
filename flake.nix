@@ -8,6 +8,30 @@
   outputs =
     inputs:
     inputs.flake-parts.lib.mkFlake { inherit inputs; } {
+      flake.lib.mkZensicalSite =
+        { system, ... }@args:
+        inputs.nixpkgs.legacyPackages.${system}.callPackage ./nix/docs.nix (
+          {
+            theme = inputs.self.packages.${system}.theme;
+            zensical = inputs.self.packages.${system}.zensical;
+          }
+          // builtins.removeAttrs args [ "system" ]
+        );
+      flake.lib.mkPreview =
+        { system, ... }@args:
+        let
+          preview = inputs.nixpkgs.legacyPackages.${system}.callPackage ./nix/preview.nix (
+            {
+              theme = inputs.self.packages.${system}.theme;
+              zensical = inputs.self.packages.${system}.zensical;
+            }
+            // builtins.removeAttrs args [ "system" ]
+          );
+        in
+        {
+          type = "app";
+          program = "${preview}/bin/strio-docs-preview";
+        };
       flake.lib.mkExample =
         { system, siteUrl }:
         let
@@ -15,7 +39,11 @@
         in
         pkgs.callPackage ./nix/example.nix {
           theme = inputs.self.packages.${system}.theme;
-          zensical = inputs.self.packages.${system}.zensical;
+          site = inputs.self.lib.mkZensicalSite {
+            inherit system siteUrl;
+            src = ./example;
+            name = "strio-acme-site";
+          };
           inherit siteUrl;
         };
       systems = [
@@ -33,27 +61,11 @@
               --prefix PATH : ${pkgs.lib.makeBinPath [ pkgs.chroma ]} \
               --prefix PYTHONPATH : ${theme}/share/strio-zensical-theme/python
           '';
-          example = pkgs.callPackage ./nix/example.nix { inherit theme zensical; };
-          preview = pkgs.writeShellApplication {
-            name = "strio-theme-preview";
-            runtimeInputs = [
-              zensical
-              pkgs.coreutils
-            ];
-            text = ''
-              work=$(mktemp -d)
-              trap 'rm -rf "$work"' EXIT
-              cp -r ${./example}/. "$work/"
-              chmod -R u+w "$work"
-              cp -r ${theme}/share/strio-zensical-theme/assets/. "$work/docs/"
-              cp -r ${theme}/share/strio-zensical-theme/overrides "$work/overrides"
-              mkdir -p "$work/docs/licenses/strio"
-              cp ${theme}/share/strio-zensical-theme/{LICENSE,licenses/*} "$work/docs/licenses/strio/"
-              chmod -R u+w "$work"
-              cd "$work"
-              zensical serve --dev-addr 127.0.0.1:8000
-            '';
+          example = inputs.self.lib.mkExample {
+            system = pkgs.stdenv.hostPlatform.system;
+            siteUrl = "https://example.com/acme/";
           };
+
         in
         {
           packages = {
@@ -72,25 +84,34 @@
             '';
             contents = pkgs.runCommand "strio-theme-contents" { } ''
               test -s ${theme}/share/strio-zensical-theme/assets/stylesheets/strio.css
+              test -s ${theme}/share/strio-zensical-theme/assets/stylesheets/palette.css
+              test -s ${theme}/share/strio-zensical-theme/python/strio_palette.py
               test -s ${theme}/share/strio-zensical-theme/assets/javascripts/copy.js
               test -s ${theme}/share/strio-zensical-theme/assets/javascripts/toc.js
+              test -s ${theme}/share/strio-zensical-theme/assets/javascripts/panels.js
               test -s ${theme}/share/strio-zensical-theme/overrides/main.html
               test -s ${theme}/share/strio-zensical-theme/overrides/404.html
               test -s ${theme}/share/strio-zensical-theme/overrides/partials/footer.html
+              test -s ${theme}/share/strio-zensical-theme/overrides/partials/pagination.html
               test -s ${theme}/share/strio-zensical-theme/overrides/.icons/strio/wordmark.svg
+              test -s ${theme}/share/strio-zensical-theme/zensical.toml
               test -s ${theme}/share/strio-zensical-theme/LICENSE
               test -s ${theme}/share/strio-zensical-theme/licenses/Zensical-MIT.txt
               mkdir "$out"
             '';
           };
-          apps.preview = {
-            type = "app";
-            program = "${preview}/bin/strio-theme-preview";
+          apps.preview = inputs.self.lib.mkPreview {
+            system = pkgs.stdenv.hostPlatform.system;
+            sourceDir = "example";
           };
           devShells.default = pkgs.mkShell {
             packages = [
               zensical
-              pkgs.python3
+              (pkgs.python3.withPackages (ps: [
+                ps.tomli-w
+                ps.pymdown-extensions
+              ]))
+              pkgs.rsync
               pkgs.nixfmt-tree
             ];
           };

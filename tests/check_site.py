@@ -21,7 +21,8 @@ class Page(HTMLParser):
 
 
 root = Path(sys.argv[1]).resolve()
-base_path = sys.argv[2] if len(sys.argv) > 2 else "/"
+base_path = urlsplit(sys.argv[2]).path if len(sys.argv) > 2 else "/"
+base_path = base_path.rstrip("/") + "/"
 pages = {}
 for path in root.rglob("*.html"):
     page = Page()
@@ -54,8 +55,9 @@ assert not errors, "\n".join(errors)
 
 html = (root / "index.html").read_text()
 for expected in (
-    "stylesheets/strio.css", "assets/acme-corner.svg", "javascripts/copy.js",
-    "javascripts/toc.js", "--strio-code-check-icon", "Acme", "strio-code-",
+    "stylesheets/strio.css", "stylesheets/palette.css", "stylesheets/strio-accent.css",
+    "assets/acme-corner.svg", "javascripts/copy.js",
+    "javascripts/toc.js", "javascripts/panels.js", "--strio-code-check-icon", "Acme", "strio-code-",
     "language-kdl", 'aria-label="Strio homepage"', 'href="https://strio.dev"',
     "strio-footer__brandbar", 'viewBox="108 148.617 396 110.766"',
 ):
@@ -63,6 +65,10 @@ for expected in (
 for name in ("LICENSE", "Zensical-MIT.txt"):
     license_text = (root / "licenses/strio" / name).read_text()
     assert "Permission is hereby granted" in license_text, name
+assert 'href="https://github.com/strio-dev/strio-zensical-theme"' in html
+components = (root / "components/index.html").read_text()
+for hook in ("strio-intro", "strio-actions", "strio-path__title", "strio-tutorial", "strio-tutorial__action", "strio-container-link"):
+    assert hook in components, hook
 assert "Page not found" in (root / "404.html").read_text()
 assert not (root / "overrides").exists()
 assert not list(root.rglob("*.py"))

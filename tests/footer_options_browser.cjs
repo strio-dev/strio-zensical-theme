@@ -26,6 +26,8 @@ assert(cases.every(([, url]) => url), 'Set HIDDEN_URL, NATIVE_URL and EMPTY_URL 
         assert.equal(await pagination.count(), 1);
         assert(await pagination.locator('.md-footer__link').count() > 0);
         if (name === 'hidden') {
+          assert.equal(await page.locator('.md-content__inner > .strio-pagination').count(), 1);
+          assert.equal(await page.locator('.strio-footer .md-footer__link').count(), 0);
           assert.equal(await pagination.getAttribute('hidden'), '');
           assert(!(await pagination.isVisible()), 'hide/footer must hide pagination');
           const brand = page.getByRole('link', { name: 'Strio homepage', exact: true });
@@ -33,6 +35,8 @@ assert(cases.every(([, url]) => url), 'Set HIDDEN_URL, NATIVE_URL and EMPTY_URL 
           assert.equal(await brand.getAttribute('href'), 'https://strio.dev');
           assert.equal(await metadata.count(), 0);
         } else {
+          assert.equal(await page.locator('.strio-pagination').count(), 0);
+          assert.equal(await page.locator('footer > .md-footer__inner').count(), 1);
           assert.equal(await page.locator('.strio-footer, .strio-footer__brandbar, .strio-footer-brand').count(), 0);
           assert(await pagination.isVisible(), 'Footer opt-out must retain pagination');
           assert.equal(await metadata.count(), 1);

@@ -17,3 +17,17 @@
   </style>
   <noscript><style>.md-code__nav { display: none; }</style></noscript>
 {% endblock %}
+
+{% block container %}
+  <div class="md-content" data-md-component="content">
+    {% if "navigation.path" in features %}
+      {% include "partials/path.html" %}
+    {% endif %}
+    <article class="md-content__inner md-typeset">
+      {{ self.content() }}
+      {% if config.extra.strio_footer | default(true) %}
+        {% include "partials/pagination.html" %}
+      {% endif %}
+    </article>
+  </div>
+{% endblock %}
