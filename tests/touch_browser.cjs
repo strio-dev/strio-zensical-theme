@@ -126,7 +126,8 @@ async function footerClearance(page) {
     assert.equal(sample.toc.width, 38); assert.equal(sample.toc.height, 38);
     assert(Math.abs(sample.toc.bottom - (sample.viewportHeight - 32)) < .01,
       'Contents control must stay in the fixed bottom corner');
-    noOverlap([{ text: 'contents', rect: sample.toc }, { text: 'Strio homepage', rect: sample.brand }, ...sample.actions], 'Contents/footer actions');
+    noOverlap([{ text: 'contents', rect: sample.toc }, { text: 'Strio homepage', rect: sample.brand }], 'Contents/footer brand');
+    noOverlap(sample.actions, 'Pagination actions');
     samples.push(sample);
   }
   await page.evaluate(async () => {

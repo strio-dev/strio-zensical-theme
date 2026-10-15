@@ -50,7 +50,7 @@ async function checkFocus(page, link, colorScheme) {
       });
       for (const [name, url, count] of [['first', home, 1], ['middle', middle, 2], ['last', new URL('../next/', middle).href, 1]]) {
         await page.goto(url, { waitUntil: 'networkidle' });
-        const pagination = page.locator('.md-content__inner > .strio-pagination');
+        const pagination = page.locator('.strio-pagination-container > .strio-pagination');
         assert.equal(await pagination.count(), 1);
         assert.equal(await page.locator('.strio-footer .md-footer__link').count(), 0);
         const brand = page.getByRole('link', { name: 'Strio homepage', exact: true });
@@ -59,21 +59,24 @@ async function checkFocus(page, link, colorScheme) {
         const metrics = await pagination.evaluate(nav => {
           const footer = document.querySelector('.strio-footer'), bar = footer.querySelector('.strio-footer__brandbar');
           const n = nav.getBoundingClientRect(), f = footer.getBoundingClientRect(), b = bar.getBoundingClientRect();
-          const article = nav.parentElement.getBoundingClientRect(), layout = document.querySelector('.md-main__inner').getBoundingClientRect();
-          let previous = nav.previousElementSibling;
+          const articleElement = document.querySelector('article.md-content__inner');
+          const article = articleElement.getBoundingClientRect(), layout = document.querySelector('.md-main__inner').getBoundingClientRect();
+          let previous = articleElement.lastElementChild;
           while (previous && !previous.getBoundingClientRect().height) previous = previous.previousElementSibling;
-          return { inArticle: !nav.closest('footer'), articleGap: n.top - previous.getBoundingClientRect().bottom, brandGap: b.top - n.bottom,
-            navBorder: getComputedStyle(nav).borderTopWidth, navPaddingTop: getComputedStyle(nav).paddingTop, navPaddingBottom: getComputedStyle(nav).paddingBottom,
+          return { afterArticle: !nav.closest('article') && nav.parentElement.previousElementSibling === articleElement, articleGap: n.top - previous.getBoundingClientRect().bottom, brandGap: b.top - n.bottom,
+            navBorder: getComputedStyle(nav).borderTopWidth, navPaddingTop: getComputedStyle(nav).paddingTop, navPaddingBottom: getComputedStyle(nav).paddingBottom, navPaddingRight: getComputedStyle(nav).paddingRight,
             navWidth: n.width, navX: n.x, articleWidth: article.width, articleX: article.x, footerWidth: f.width, footerX: f.x, layoutX: layout.x, layoutRight: layout.right, rootFont: parseFloat(getComputedStyle(document.documentElement).fontSize), brandWidth: b.width, brandRight: b.right, brandHeight: b.height,
             brandLogoWidth: bar.querySelector('svg').getBoundingClientRect().width, brandLogoX: bar.querySelector('svg').getBoundingClientRect().x, brandX: b.x, brandPaddingTop: getComputedStyle(bar.firstElementChild).paddingTop, brandPaddingBottom: getComputedStyle(bar.firstElementChild).paddingBottom,
             brandBorder: getComputedStyle(bar).borderTopWidth, outerBorder: getComputedStyle(footer).borderTopWidth, brandBackground: getComputedStyle(bar).backgroundColor,
-            containerWidth: document.querySelector('.md-container').getBoundingClientRect().width, overflow: document.documentElement.scrollWidth > innerWidth };
+            containerWidth: document.querySelector('.md-container').getBoundingClientRect().width, containerBottom: document.querySelector('.md-container').getBoundingClientRect().bottom, footerBottom: f.bottom, overflow: document.documentElement.scrollWidth > innerWidth };
         });
-        assert(metrics.inArticle);
-        assert(Math.abs(metrics.articleGap - (width <= 600 ? 32 : 48)) < 1, `${name}: article gap ${metrics.articleGap}`);
+        assert(metrics.afterArticle, 'Pagination must follow the growing article');
+        assert(metrics.articleGap >= (width <= 600 ? 32 : 48) - .01, `${name}: minimum article gap ${metrics.articleGap}`);
         assert(Math.abs(metrics.brandGap - 40) < 1, `${name}: brand gap ${metrics.brandGap}`);
+        assert(Math.abs(metrics.footerBottom - metrics.containerBottom) < 1, 'Short-page space must stay above the compact footer');
         assert.equal(metrics.navBorder, '0px');
         assert.equal(metrics.navPaddingTop, '0px'); assert.equal(metrics.navPaddingBottom, '0px');
+        assert.equal(metrics.navPaddingRight, '0px', 'Pagination must not reserve a Contents lane');
         assert.equal(metrics.brandPaddingTop, '27px'); assert.equal(metrics.brandPaddingBottom, '27px');
         assert.equal(metrics.brandBorder, '1px'); assert.equal(metrics.outerBorder, '0px');
         assert.equal(metrics.footerWidth, metrics.containerWidth);
@@ -110,20 +113,15 @@ async function checkFocus(page, link, colorScheme) {
         }
         if (count === 2) {
           const previous = await pagination.locator('.md-footer__link--prev').boundingBox(), next = await pagination.locator('.md-footer__link--next').boundingBox();
-          if (width <= 480) {
-            assert(Math.abs(previous.x - next.x) < 1);
-            assert(Math.abs(next.y - previous.y - previous.height - 16) < 1);
-            assert(Math.abs(previous.width - metrics.navWidth) < 1 && Math.abs(next.width - metrics.navWidth) < 1);
-          } else assert(previous.x + previous.width <= next.x);
+          assert(Math.abs(previous.y - next.y) < 1, 'Previous and Next must share a row');
+          assert(previous.x + previous.width <= next.x);
         }
         await page.evaluate(() => scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }));
         await page.evaluate(() => new Promise(resolve => requestAnimationFrame(resolve)));
         assert(await page.evaluate(() => {
-          const button = document.querySelector('.md-sidebar-button'); if (!button || !button.getBoundingClientRect().height) return true;
-          const b = button.getBoundingClientRect(); return [...document.querySelectorAll('.strio-pagination .md-footer__link')].every(element => {
-            const r = element.getBoundingClientRect(); return r.bottom <= b.top || r.top >= b.bottom || r.right <= b.left || r.left >= b.right;
-          });
-        }), 'Floating contents button must clear pagination');
+          const button = document.querySelector('[data-strio-panel-trigger="toc"]'); if (!button || !button.getBoundingClientRect().height) return true;
+          const b = button.getBoundingClientRect(); return Math.abs(innerHeight - b.bottom - 32) < .1;
+        }), 'Contents must retain its fixed corner while pagination scrolls');
         focusContrasts.push(await checkFocus(page, brand, colorScheme));
         await page.locator('h1').click(); await page.mouse.move(width - 1, 1);
         await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
