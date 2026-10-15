@@ -7,10 +7,6 @@
   /* Panel corners stay consistent when the native root font size increases. */
   --strio-panel-radius: 8px;
   --strio-header-height: calc(64px + env(safe-area-inset-top, 0px));
-  /* Strio's 108px header wordmark has this visible height. */
-  --strio-header-logo-height: 30.203125px;
-  --strio-header-logo-scale: 1;
-  --strio-header-logo-shift: 0%;
   /* Painted extent of Strio's 16px Lucide sun; palette icons share its box size. */
   --strio-header-icon-extent: 14.666667px;
 }
@@ -87,7 +83,7 @@ body {
   --md-code-hl-generic-color: #fff;
 }
 .md-header__button.md-logo { display: inline-flex; align-items: center; min-height: 2.2rem; padding-block: 0; }
-.md-header__button.md-logo img { width: auto; height: calc(var(--strio-header-logo-height) * var(--strio-header-logo-scale)); transform: translateY(var(--strio-header-logo-shift)); }
+.md-header__button.md-logo img { width: auto; height: 31.13px; }
 .md-logo img { filter: none; }
 [data-md-color-scheme="slate"] .md-logo img { filter: invert(1); }
 .md-nav--primary > .md-nav__title[for="__drawer"] { font-size: 0; }
@@ -266,7 +262,7 @@ body {
   body .md-header__button.md-logo { display: inline-flex; padding: .2rem; }
 }
 @media (max-width: 600px) {
-  :root { --strio-header-logo-height: 26.84375px; }
+  .md-header__button.md-logo img { height: 27.66px; }
 }
 /* Keep the existing controls beside wider wordmarks on narrow phones. */
 @media (max-width: 360px) {

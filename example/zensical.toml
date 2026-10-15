@@ -6,7 +6,6 @@ repo_url = "https://github.com/strio-dev/strio-zensical-theme"
 repo_name = "strio-dev/strio-zensical-theme"
 docs_dir = "docs"
 site_dir = "site"
-extra_css = ["stylesheets/acme.css"]
 dev_addr = "127.0.0.1:8000"
 nav = [{ "Overview" = "index.md" }, { "Details" = "details.md" }, { "Components" = "components.md" }]
 
