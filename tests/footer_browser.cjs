@@ -40,11 +40,14 @@ async function checkFocus(page, link, colorScheme) {
 (async () => {
   const browser = await chromium.launch({ executablePath: process.env.CHROMIUM || 'chromium', args: ['--no-sandbox'] });
   try {
-    for (const colorScheme of ['light', 'dark']) for (const width of [320, 390, 480, 481, 1440]) {
+    for (const colorScheme of ['light', 'dark']) for (const width of [320, 390, 480, 481, 600, 601, 960, 1220, 1234, 1235, 1236, 1440, 1600, 2000]) {
       const page = await browser.newPage({ viewport: { width, height: 900 }, colorScheme });
       const errors = [];
       page.on('pageerror', error => errors.push(error.message));
-      page.on('response', response => { if (response.status() >= 400) errors.push(`${response.status()} ${response.url()}`); });
+      page.on('response', response => {
+        if (response.status() >= 400 && new URL(response.url()).origin === new URL(home).origin)
+          errors.push(`${response.status()} ${response.url()}`);
+      });
       for (const [name, url, count] of [['first', home, 1], ['middle', middle, 2], ['last', new URL('../next/', middle).href, 1]]) {
         await page.goto(url, { waitUntil: 'networkidle' });
         const pagination = page.locator('.md-content__inner > .strio-pagination');
@@ -56,13 +59,13 @@ async function checkFocus(page, link, colorScheme) {
         const metrics = await pagination.evaluate(nav => {
           const footer = document.querySelector('.strio-footer'), bar = footer.querySelector('.strio-footer__brandbar');
           const n = nav.getBoundingClientRect(), f = footer.getBoundingClientRect(), b = bar.getBoundingClientRect();
-          const article = nav.parentElement.getBoundingClientRect();
+          const article = nav.parentElement.getBoundingClientRect(), layout = document.querySelector('.md-main__inner').getBoundingClientRect();
           let previous = nav.previousElementSibling;
           while (previous && !previous.getBoundingClientRect().height) previous = previous.previousElementSibling;
           return { inArticle: !nav.closest('footer'), articleGap: n.top - previous.getBoundingClientRect().bottom, brandGap: b.top - n.bottom,
             navBorder: getComputedStyle(nav).borderTopWidth, navPaddingTop: getComputedStyle(nav).paddingTop, navPaddingBottom: getComputedStyle(nav).paddingBottom,
-            navWidth: n.width, navX: n.x, articleWidth: article.width, articleX: article.x, footerWidth: f.width, brandWidth: b.width, brandHeight: b.height,
-            brandLogoWidth: bar.querySelector('svg').getBoundingClientRect().width, brandPaddingTop: getComputedStyle(bar.firstElementChild).paddingTop, brandPaddingBottom: getComputedStyle(bar.firstElementChild).paddingBottom,
+            navWidth: n.width, navX: n.x, articleWidth: article.width, articleX: article.x, footerWidth: f.width, footerX: f.x, layoutX: layout.x, layoutRight: layout.right, rootFont: parseFloat(getComputedStyle(document.documentElement).fontSize), brandWidth: b.width, brandRight: b.right, brandHeight: b.height,
+            brandLogoWidth: bar.querySelector('svg').getBoundingClientRect().width, brandLogoX: bar.querySelector('svg').getBoundingClientRect().x, brandX: b.x, brandPaddingTop: getComputedStyle(bar.firstElementChild).paddingTop, brandPaddingBottom: getComputedStyle(bar.firstElementChild).paddingBottom,
             brandBorder: getComputedStyle(bar).borderTopWidth, outerBorder: getComputedStyle(footer).borderTopWidth, brandBackground: getComputedStyle(bar).backgroundColor,
             containerWidth: document.querySelector('.md-container').getBoundingClientRect().width, overflow: document.documentElement.scrollWidth > innerWidth };
         });
@@ -71,10 +74,13 @@ async function checkFocus(page, link, colorScheme) {
         assert(Math.abs(metrics.brandGap - 40) < 1, `${name}: brand gap ${metrics.brandGap}`);
         assert.equal(metrics.navBorder, '0px');
         assert.equal(metrics.navPaddingTop, '0px'); assert.equal(metrics.navPaddingBottom, '0px');
-        assert.equal(metrics.brandPaddingTop, '10px'); assert.equal(metrics.brandPaddingBottom, '10px');
+        assert.equal(metrics.brandPaddingTop, '27px'); assert.equal(metrics.brandPaddingBottom, '27px');
         assert.equal(metrics.brandBorder, '1px'); assert.equal(metrics.outerBorder, '0px');
-        assert.equal(metrics.brandWidth, metrics.footerWidth); assert.equal(metrics.footerWidth, metrics.containerWidth);
-        assert.equal(metrics.brandHeight, 65); assert.equal(metrics.brandLogoWidth, 72);
+        assert.equal(metrics.footerWidth, metrics.containerWidth);
+        assert(Math.abs(metrics.brandX - metrics.layoutX) < .02 && Math.abs(metrics.brandRight - metrics.layoutRight) < .02, 'Footer divider must fill the available width up to the native docs grid');
+        const logoInset = width <= 600 ? 24 : 40;
+        assert(Math.abs(metrics.brandLogoX - metrics.brandX - logoInset) < .02, 'Footer wordmark must retain responsive padding at every width');
+        assert(Math.abs(metrics.brandHeight - (55 + 89 * 110.766 / 396)) < .02); assert.equal(metrics.brandLogoWidth, 89);
         assert(Math.abs(metrics.navWidth - metrics.articleWidth) < 1); assert(Math.abs(metrics.navX - metrics.articleX) < 1);
         assert(!metrics.overflow); assert.equal(metrics.brandBackground, 'rgba(0, 0, 0, 0)');
         assert.equal(await page.locator('.strio-footer__brandbar a').count(), 1);
@@ -96,8 +102,10 @@ async function checkFocus(page, link, colorScheme) {
               fontFamily: getComputedStyle(title).fontFamily, bodyFont: getComputedStyle(document.body).fontFamily, arrowWidth: svg.width, arrowHeight: svg.height };
           });
           assert(bounds.height >= 44); assert(bounds.contained); assert(bounds.fullTitle); assert(bounds.unclipped);
-          assert.equal(bounds.titleSize, '16px'); assert.equal(bounds.directionSize, '12px'); assert.equal(bounds.fontFamily, bounds.bodyFont);
-          assert.equal(bounds.arrowWidth, 24); assert.equal(bounds.arrowHeight, 24);
+          assert(Math.abs(parseFloat(bounds.titleSize) - metrics.rootFont * .8) < .02, 'Native pagination title must scale with the root font');
+          assert(Math.abs(parseFloat(bounds.directionSize) - metrics.rootFont * .6) < .02, 'Native pagination direction must scale with the root font');
+          assert.equal(bounds.fontFamily, bounds.bodyFont);
+          assert(Math.abs(bounds.arrowWidth - metrics.rootFont * 1.2) < .02 && Math.abs(bounds.arrowHeight - metrics.rootFont * 1.2) < .02, 'Native pagination arrow must scale with the root font');
           focusContrasts.push(await checkFocus(page, link, colorScheme));
         }
         if (count === 2) {

@@ -67,7 +67,7 @@
     }
   }
 
-  // Reserve footer clearance once so the native contents control stays still.
+  // Keep the native corner anchor until footer actions reach it, then track them.
   function updateFooterClearance() {
     footerFrame = 0;
     const panel = panels.find(item => item.kind === "toc");
@@ -83,16 +83,16 @@
     let boundary = brand?.height ? brand.top : Number.POSITIVE_INFINITY;
     for (const link of document.querySelectorAll(".strio-pagination:not([hidden]) .md-footer__link")) {
       const bounds = link.getBoundingClientRect();
-      if (bounds.width && bounds.height && bounds.bottom > 0 &&
+      if (bounds.width && bounds.height &&
           bounds.left < trigger.right && bounds.right > trigger.left) {
         boundary = Math.min(boundary, bounds.top);
       }
     }
-    // Use document coordinates rather than following the footer each scroll.
-    // This is the clearance needed at page end, held throughout the page.
+    // Only obstacle geometry enters the clamp; the control's own vertical
+    // position cannot feed back into its next offset.
     const hasFooter = Number.isFinite(boundary);
     const offset = hasFooter
-      ? Math.max(0, document.documentElement.scrollHeight - (boundary + scrollY) + 5)
+      ? Math.max(0, innerHeight - boundary + 5)
       : 0;
     const headerBottom = document.querySelector(".md-header")?.getBoundingClientRect().bottom || 0;
     // Preserve the native 54px anchor unless the popup would clip the header.
@@ -214,7 +214,8 @@
       }
     }
   }
-  window.addEventListener("scroll", queueFooterClearance, { passive: true });
+  // Track current scroll geometry directly, with no delayed position animation.
+  window.addEventListener("scroll", updateFooterClearance, { passive: true });
   window.addEventListener("resize", queueFooterClearance);
   tocMedia.addEventListener("change", queueFooterClearance);
   drawerMedia.addEventListener("change", resize);

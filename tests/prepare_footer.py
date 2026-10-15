@@ -1,4 +1,4 @@
-"""Build isolated pagination and interaction fixtures.
+"""Build isolated pagination, interaction and panel fixtures.
 
 Use --controls for interaction_browser.cjs. For footer_options_browser.cjs,
 build each of --case hidden/native/empty with its own --output and --site-url,
@@ -25,6 +25,7 @@ parser.add_argument('--site-url', default='http://127.0.0.1:8765/middle/')
 parser.add_argument('--case', choices=['branded', 'hidden', 'native', 'empty'], default='branded')
 parser.add_argument('--controls', action='store_true', help='Append the interaction controls fixture to the overview')
 parser.add_argument('--theme', action='store_true', help='Include controls, long TOC, prose, tables and callouts for theme_browser.cjs')
+parser.add_argument('--panels', action='store_true', help='Include the panel gallery for panels_browser.cjs')
 parser.add_argument('--accent', help='Override the fixture project UI accent (#RRGGBB)')
 args = parser.parse_args()
 root = Path(__file__).resolve().parents[1]
@@ -35,6 +36,8 @@ if args.controls or args.theme:
     overview.write_text(overview.read_text() + '\n' + (root / 'tests/fixtures/controls.md').read_text())
     if args.theme:
         overview.write_text(overview.read_text() + '\n' + (root / 'tests/fixtures/reading.md').read_text())
+if args.panels:
+    shutil.copyfile(root / 'tests/fixtures/panels.md', args.output / 'docs/panels.md')
 shutil.copytree(root / 'theme/assets', args.output / 'docs', dirs_exist_ok=True)
 shutil.copytree(root / 'theme/overrides', args.output / 'overrides')
 shutil.copytree(root / 'theme/licenses', args.output / 'docs/licenses/strio')
@@ -53,8 +56,11 @@ project['nav'] = [
     {"Details": "details.md"},
     {"Deploying and maintaining applications in production": "next.md"},
 ]
+if args.panels:
+    project['nav'].append({'Panels': 'panels.md'})
 if args.theme:
     project['nav'] = [{'Guides': project['nav']}]
+if args.theme or args.panels:
     project['markdown_extensions'].update({'admonition': {}, 'pymdownx.details': {}})
 project['theme']['custom_dir'] = 'overrides'
 if args.case in ('native', 'empty'):

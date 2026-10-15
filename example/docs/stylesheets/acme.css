@@ -1,0 +1,5 @@
+/* Keep the supplied paths and viewBox; compensate for their transparent space. */
+:root {
+  --strio-header-logo-scale: 1.083916;
+  --strio-header-logo-shift: .483870%;
+}

@@ -43,6 +43,27 @@ function noOverlap(items, label) {
   }
 }
 
+async function headerLogoInk(page) {
+  return page.locator('.md-header__button.md-logo img').evaluate(async image => {
+    await image.decode();
+    const source = await (await fetch(image.currentSrc)).text();
+    const svg = document.importNode(new DOMParser().parseFromString(source, 'image/svg+xml').documentElement, true);
+    svg.style.cssText = 'position:fixed;left:-10000px;top:0';
+    document.body.append(svg);
+    try {
+      const ink = svg.getBBox(), viewBox = svg.viewBox.baseVal;
+      const rect = image.getBoundingClientRect();
+      const scale = rect.height / viewBox.height;
+      return {
+        height: ink.height * scale,
+        centerY: rect.y + (ink.y - viewBox.y + ink.height / 2) * scale,
+        ratio: rect.width / rect.height,
+        intrinsicRatio: viewBox.width / viewBox.height,
+      };
+    } finally { svg.remove(); }
+  });
+}
+
 async function codeClearance(page) {
   return page.locator('.md-code__button').evaluateAll(buttons => buttons
     .filter(button => button.getBoundingClientRect().width)
@@ -89,13 +110,13 @@ async function footerClearance(page) {
   const samples = [];
   for (const position of positions) {
     await page.evaluate(async top => {
-      scrollTo(0, top);
+      scrollTo({ top, behavior: "instant" });
       await new Promise(resolve => requestAnimationFrame(() => requestAnimationFrame(resolve)));
     }, position);
     const sample = await page.evaluate(() => {
       const rect = selector => document.querySelector(selector).getBoundingClientRect().toJSON();
       return {
-        scroll: scrollY,
+        scroll: scrollY, viewportHeight: innerHeight,
         toc: rect('[data-strio-panel-trigger="toc"]'),
         brand: rect('.strio-footer__brandbar'),
         actions: [...document.querySelectorAll('.strio-pagination:not([hidden]) .md-footer__link')]
@@ -103,8 +124,12 @@ async function footerClearance(page) {
       };
     });
     assert.equal(sample.toc.width, 38); assert.equal(sample.toc.height, 38);
-    if (samples.length) assert(Math.abs(sample.toc.top - samples[0].toc.top) < .01,
-      'Contents control moves while scrolling toward or away from footer');
+    const boundary = Math.min(sample.brand.top, ...sample.actions
+      .filter(item => item.rect.left < sample.toc.right && item.rect.right > sample.toc.left)
+      .map(item => item.rect.top));
+    const expectedBottom = Math.min(sample.viewportHeight - 32, boundary - 5);
+    assert(Math.abs(sample.toc.bottom - expectedBottom) < .01,
+      'Contents control must retain its corner anchor or track the footer boundary exactly');
     assert(sample.toc.bottom <= sample.brand.top - 4.99, 'Contents control crosses footer divider');
     noOverlap([{ text: 'contents', rect: sample.toc }, ...sample.actions], 'Contents/footer actions');
     samples.push(sample);
@@ -174,10 +199,23 @@ async function shortViewportPopup(page) {
       result.header = await measure(page, '.md-header__button.md-icon:not([for="__search"]), .md-header__button.md-logo');
       result.headerAll = await measure(page, '.md-header__button, .md-header .md-source, .md-search__button');
       result.source = await measure(page, '.md-header .md-source');
+      assert.equal(await page.locator('.md-header').evaluate(element => element.getBoundingClientRect().height), 64, 'Docs header must match the 64px homepage bar');
+      result.headerLogo = await headerLogoInk(page);
+      const logoHeight = width <= 600 ? 26.84375 : 30.203125;
+      assert(Math.abs(result.headerLogo.height - logoHeight) < .04, 'Project logo visible height must match the homepage header');
+      assert(Math.abs(result.headerLogo.centerY - 32) < .04, 'Project logo artwork must stay vertically centered');
+      assert(Math.abs(result.headerLogo.ratio - result.headerLogo.intrinsicRatio) < .006, 'Project logo proportions changed');
       if (touch) {
         targetSize(result.buttons, 'buttons'); targetSize(result.compact, 'compact');
         targetSize(result.header, 'header'); noOverlap(result.headerAll, 'header');
         if (result.source.length) targetSize(result.source, 'repository');
+        await page.setViewportSize({ width: 320, height: 900 });
+        result.narrowHeader = await measure(page, '.md-header__button.md-icon:not([for="__search"]), .md-header__button.md-logo');
+        targetSize(result.narrowHeader, '320px header');
+        noOverlap(await measure(page, '.md-header__button, .md-header .md-source, .md-search__button'), '320px header');
+        const narrowSearch = await measure(page, '.md-header__button[for="__search"]');
+        assert(narrowSearch.every(item => item.rect.width === 36 && item.rect.height === 36), '320px native search control changed');
+        await page.setViewportSize({ width, height: 900 });
       } else {
         assert(result.buttons.every(item => item.rect.height === 40), 'Desktop buttons changed');
         assert(result.compact.every(item => item.rect.height === 36), 'Desktop compact links changed');
@@ -226,8 +264,9 @@ async function shortViewportPopup(page) {
         await page.waitForFunction(() => document.querySelector('#__toc').checked);
         const popup = await page.locator('.md-sidebar--secondary .md-sidebar__inner').evaluate(element => ({ width: getComputedStyle(element).width, bottom: getComputedStyle(element).bottom }));
         assert.deepEqual(popup, { width: '234px', bottom: '54px' }, 'Native contents popup anchors changed');
+        await page.waitForFunction(() => getComputedStyle(document.querySelector('.md-sidebar--secondary .md-sidebar__inner')).transform === 'none');
         assert.equal(await page.locator('.md-sidebar--secondary .md-sidebar__inner')
-          .evaluate(element => getComputedStyle(element).transform), 'none', 'Contents popup slides on opening');
+          .evaluate(element => getComputedStyle(element).transform), 'none', 'Open Contents popup must settle at its native anchor');
         await page.locator('[data-strio-panel-close="toc"]').click();
         await page.waitForFunction(() => !document.querySelector('#__toc').checked);
         await page.emulateMedia({ reducedMotion: 'reduce' });
@@ -263,7 +302,8 @@ async function shortViewportPopup(page) {
         logoWidth: element.querySelector('.strio-footer-brand svg').getBoundingClientRect().width,
         targetHeight: element.querySelector('.strio-footer-brand').getBoundingClientRect().height,
       }));
-      assert.deepEqual(brand, { height: 65, logoWidth: 72, targetHeight: 44 }, 'Footer logo changed compact row or target geometry');
+      assert(Math.abs(brand.height - (55 + 89 * 110.766 / 396)) < .02, 'Footer must match homepage vertical geometry');
+      assert.equal(brand.logoWidth, 89); assert(brand.targetHeight >= 44, 'Footer wordmark must retain its touch target');
       result.copy = await measure(page, '.md-code__button');
       if (touch) targetSize(result.copy, 'copy');
       else assert(result.copy.every(item => item.rect.width === 28 && item.rect.height === 28), 'Desktop clipboard changed');
