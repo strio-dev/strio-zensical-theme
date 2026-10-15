@@ -64,8 +64,8 @@ async function check(page, expected) {
   await new Promise(resolve => server.listen(0, '127.0.0.1', resolve));
   const browser = await chromium.launch({ executablePath: process.env.CHROMIUM || 'chromium', args: ['--no-sandbox'] });
   try {
-    for (const colorScheme of ['light', 'dark']) {
-      const page = await browser.newPage({ viewport: { width: 390, height: 844 }, colorScheme });
+    for (const [width, colorScheme] of [[390, 'dark'], [1440, 'light']]) {
+      const page = await browser.newPage({ viewport: { width, height: 900 }, colorScheme });
       const errors = [];
       page.on('pageerror', error => errors.push(error.message));
       const home = `http://127.0.0.1:${server.address().port}/`;

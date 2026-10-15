@@ -12,6 +12,7 @@ custom_dir = "overrides"
 language = "en"
 font = false
 features = [
+  "content.code.copy",
   "navigation.instant",
   "navigation.instant.progress",
   "navigation.sections",
@@ -40,7 +41,6 @@ toggle.icon = "lucide/moon"
 toggle.name = "Switch to light mode"
 
 [project.markdown_extensions]
-strio_copy = {}
 attr_list = {}
 md_in_html = {}
 "pymdownx.highlight" = { anchor_linenums = true, pygments_lang_class = true }

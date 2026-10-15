@@ -21,7 +21,7 @@ apps.docs-preview = inputs.strio-theme.lib.mkPreview {
 
 Keep `zensical.toml`, Markdown and your logo in that source. Adapt [Acme’s config](example/zensical.toml). Theme files are staged automatically outside your source tree. Shared CSS and JavaScript URLs include a content hash so browsers cannot mix cached theme assets from different releases. Project settings override defaults; project CSS and scripts follow the shared assets. Set `project.repo_url` and `project.repo_name` to enable the native navbar and drawer repository link.
 
-Header wordmarks use Strio's visible height: about 27px through 600px and 30px above it, with intrinsic width. For an SVG with transparent space inside its viewBox, set the shared theme's `--strio-header-logo-scale` and `--strio-header-logo-shift` in your project `extra_css`, as [Acme does](example/docs/stylesheets/acme.css). Scale is viewBox height divided by visible artwork height; shift is `(viewBox center − artwork center) / viewBox height`, expressed as a percentage. This preserves the asset and its proportions. These variables affect the project header logo; the Strio footer remains 89px wide.
+Header wordmarks use Strio's visible height: about 27px through 600px and 30px above it, with intrinsic width. For an SVG with transparent space inside its viewBox, set the shared theme's `--strio-header-logo-scale` and `--strio-header-logo-shift` in your project `extra_css`, as [Acme does](example/docs/stylesheets/acme.css). Scale is viewBox height divided by visible artwork height; shift is `(viewBox center − artwork center) / viewBox height`, expressed as a percentage. An optical adjustment can align lettering with a reference wordmark, as Acme does. These variables affect the project header logo; the Strio footer remains 89px wide.
 
 The shared palette uses muted amber for the UI accent. Choose a project hue in `zensical.toml`, as Acme does:
 
@@ -30,7 +30,7 @@ The shared palette uses muted amber for the UI accent. Choose a project hue in `
 strio_accent = "#4876BA"
 ```
 
-Use a six-digit hex color. The build adjusts lightness when needed for contrast in both modes; buttons, link decoration, focus and current navigation use the resulting hue. Syntax hue families stay fixed across projects, with readable mode-specific shades on Coopr’s subtle code surfaces: `#F8F8F8` in light mode and `#202020` in dark mode. Project CSS and scripts load after the generated theme assets.
+Use a six-digit hex color. The build adjusts lightness when needed for contrast in both modes; buttons, link decoration, focus and current navigation use the resulting hue. Syntax hue families stay fixed across projects, with readable mode-specific shades on the shared code surfaces: `#F8F8F8` in light mode and `#202020` in dark mode. Project CSS and scripts load after the generated theme assets.
 
 [Acme’s component examples](example/docs/components.md) show intro text, action groups, information cards, tutorial cards and compact outline links.
 
@@ -52,8 +52,8 @@ apps.docs-preview = inputs.strio-theme.lib.mkPreview {
 };
 ```
 
-`sourcePaths` is an optional, nonempty list of existing paths relative to `sourceDir`. Include the config, its `docs_dir` and any project `custom_dir`; directories include their contents and newly created files. Only selected inputs are staged and recursively watched. Their parents are watched without recursion to detect atomic replacements, and unrelated parent events are ignored. Preview waits for watch installation before staging and serving, and retains established watches through ordinary saves. Private directories such as `.omx` and build-result links stay outside the preview. Entries must be plain relative paths without `..`, glob characters or control separators. Scoped previews accept file symlinks only when their targets are also selected; directory symlinks are rejected. With `sourcePaths` omitted, the whole documentation source is staged and watched as before.
+`sourcePaths` selects the config, its docs directory and any project template overrides. Only those inputs are staged and watched, including new files and atomic saves. Use existing plain relative paths; file symlinks must target another selected file, and directory symlinks are unsupported. Omit it when `sourceDir` contains only documentation.
 
-[Browser verification](tests/README.md) covers keyboard controls, reading styles and native-search regressions.
+Run `nix flake check` for the package, strict examples and preview regressions. Browser drivers in `tests/` use an installed Playwright and Chromium; generated fixtures stay outside the repository.
 
 [MIT License](LICENSE); third-party notices in [theme/licenses](theme/licenses).

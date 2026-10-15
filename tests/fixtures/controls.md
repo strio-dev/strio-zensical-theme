@@ -18,6 +18,10 @@ printf 'clipboard specimen'
 Read-only output has no clipboard control.
 ```
 
+```{ .text .copy .no-copy }
+explicit copy specimen
+```
+
 <div data-copy="copy override specimen" markdown>
 ```sh
 Visible illustrative command

@@ -55,7 +55,6 @@
     sync(panel);
     panel.toggle.dispatchEvent(new Event("input", { bubbles: true }));
     panel.toggle.dispatchEvent(new Event("change", { bubbles: true }));
-    sync(panel);
     if (open && keyboard) {
       const target = panel.kind === "toc" ? revealCurrent(panel)
         : panel.content.querySelector('.md-nav--primary a.md-nav__link:not(.md-nav__container)');
@@ -84,9 +83,7 @@
       trigger.dataset.strioPanelTrigger = kind;
       // The drawer already has a native closing label; it needs no extra UI.
       let close = null;
-      if (kind === "drawer") {
-        content.querySelector(".strio-panel-close")?.remove();
-      } else {
+      if (kind === "toc") {
         close = content.querySelector(".strio-panel-close");
         if (!close) {
           close = document.createElement("button");

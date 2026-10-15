@@ -34,11 +34,7 @@
         };
       flake.lib.mkExample =
         { system, siteUrl }:
-        let
-          pkgs = inputs.nixpkgs.legacyPackages.${system};
-        in
-        pkgs.callPackage ./nix/example.nix {
-          theme = inputs.self.packages.${system}.theme;
+        inputs.nixpkgs.legacyPackages.${system}.callPackage ./nix/example.nix {
           site = inputs.self.lib.mkZensicalSite {
             inherit system siteUrl;
             src = ./example;
@@ -129,23 +125,18 @@
               actionlint -shellcheck= ${./.github/workflows/ci.yml} ${./.github/workflows/pages.yml}
               mkdir "$out"
             '';
-            contents = pkgs.runCommand "strio-theme-contents" { } ''
-              test -s ${theme}/share/strio-zensical-theme/assets/stylesheets/strio.css
-              test -s ${theme}/share/strio-zensical-theme/assets/stylesheets/palette.css
-              test -s ${theme}/share/strio-zensical-theme/python/strio_palette.py
-              test -s ${theme}/share/strio-zensical-theme/assets/javascripts/copy.js
-              test -s ${theme}/share/strio-zensical-theme/assets/javascripts/toc.js
-              test -s ${theme}/share/strio-zensical-theme/assets/javascripts/panels.js
-              test -s ${theme}/share/strio-zensical-theme/overrides/main.html
-              test -s ${theme}/share/strio-zensical-theme/overrides/404.html
-              test -s ${theme}/share/strio-zensical-theme/overrides/partials/footer.html
-              test -s ${theme}/share/strio-zensical-theme/overrides/partials/pagination.html
-              test -s ${theme}/share/strio-zensical-theme/overrides/.icons/strio/wordmark.svg
-              test -s ${theme}/share/strio-zensical-theme/zensical.toml
-              test -s ${theme}/share/strio-zensical-theme/LICENSE
-              test -s ${theme}/share/strio-zensical-theme/licenses/Zensical-MIT.txt
-              mkdir "$out"
-            '';
+            python = pkgs.runCommand "strio-python-tests"
+              {
+                nativeBuildInputs = [
+                  pkgs.chroma
+                  (pkgs.python3.withPackages (ps: [ ps.pymdown-extensions ]))
+                ];
+                PYTHONPATH = "${theme}/share/strio-zensical-theme/python:${./tests/python}";
+              }
+              ''
+                python3 -B -m unittest test_palette test_highlight
+                mkdir "$out"
+              '';
           };
           apps.preview = inputs.self.lib.mkPreview {
             system = pkgs.stdenv.hostPlatform.system;
