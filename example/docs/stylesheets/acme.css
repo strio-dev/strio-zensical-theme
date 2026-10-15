@@ -1,5 +1,5 @@
-/* Align Acme lettering with the homepage wordmark ink, preserving the SVG geometry. */
+/* Match Strio's lowercase letter bodies; scale the approved Acme lockup uniformly. */
 :root {
-  --strio-header-logo-scale: 1.027874;
-  --strio-header-logo-shift: .483870%;
+  --strio-header-logo-scale: .781863;
+  --strio-header-logo-shift: 16%;
 }
