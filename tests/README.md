@@ -32,7 +32,25 @@ Run the focused touch checks against the same `--theme` fixture:
 node tests/touch_browser.cjs http://127.0.0.1:8765/
 ```
 
-Four light/dark mobile/desktop states check 44px action, copy and drawer navigation rows, control-group overlap, keyboard activation, code-copy clearance and compact desktop sizes. The drawer wordmark retains Coopr’s 120px width, intrinsic height and 8px title padding; it is exempt from the 44px target check. The pinned native contents trigger retains its 38px size and floating placement. Its fixed position reserves clearance above footer branding and pagination throughout the page, so scrolling does not move it. The popup uses an opacity-only fade, disabled for reduced motion. In short viewports, its existing popup shifts beside the trigger to stay below the header; the normal 54px popup anchor remains unchanged. The floating trigger can overlap other scrolling article controls. Native search retains its existing target and is checked separately above.
+Four light/dark mobile/desktop states check 44px action, copy and drawer navigation rows, control-group overlap, keyboard activation, code-copy clearance and compact desktop sizes. The drawer wordmark retains Coopr’s 120px width, intrinsic height and 8px title padding; it is exempt from the 44px target check. The pinned native contents trigger retains its 38px size and floating placement. It stays 32px above the viewport bottom until footer branding or pagination reaches it, then tracks that boundary with 5px clearance and no position transition. The popup adapts the [official shadcn popover motion](https://github.com/shadcn-ui/ui/blob/main/apps/v4/registry/new-york-v4/ui/popover.tsx): a 150ms ease-out fade and 95% zoom from an 8px lower pose, anchored to its bottom-right corner. Opening and closing remain monotonic, and reduced motion removes both transforms and transitions immediately. In short viewports, its existing popup shifts beside the trigger to stay below the header; the normal 54px popup anchor remains unchanged. The floating trigger can overlap other scrolling article controls. Native search retains its existing target and is checked separately above.
+
+The docs title bar is 64px at every viewport size. Its project wordmark matches the homepage header's visible height (26.84px through 600px; 30.20px above), with intrinsic width and project CSS compensation for SVG padding. The bottom wordmark row follows the homepage's 27px vertical padding and 89px logo. Its divider fills the available width up to the native 61rem docs grid, including the sidebar and contents columns. The logo keeps the homepage's 24px horizontal inset through 600px and 40px above that, including when the divider reaches the docs grid limit. Previous/next navigation stays in the article.
+
+For continuous contents-button tracking on short and tall mobile viewports in both modes, run the self-contained driver against the generated fixture:
+
+```sh
+node tests/contents_tracking_browser.cjs /tmp/strio-theme-check/site /tmp/strio-contents-tracking
+```
+
+It samples both scroll directions across the footer boundary, checks the corner inset, exact collision clearance, monotonic movement and absence of settling, and verifies popup keyboard behavior and reduced motion. Measurements and screenshots are written to the supplied output directory. The driver hit-tests the trigger and pagination throughout the sweep and checks pointer and keyboard popup access. At viewport heights of 400px or less, pagination reserves a 54px lane on its right side for the native control; the control can stay beside navigation and continue clearing the footer without entering the header. Taller viewports retain the full-width pagination and normal collision tracking.
+
+For the compact popup motion, use the same generated fixture:
+
+```sh
+node tests/contents_motion_browser.cjs /tmp/strio-theme-check/site /tmp/strio-contents-motion
+```
+
+This driver samples opening, visible closing and rapid reversals for opacity, scale and vertical movement, including RTL and short viewports. It checks no overshoot, immediate reduced-motion states, native keyboard/pointer access, unchanged trigger/footer tracking and the 959px/960px desktop boundary. Full mobile popup screenshots and frame measurements are written to the output directory.
 
 For project-accent and shared-syntax checks, build two fresh fixtures and run the self-contained browser driver:
 
@@ -43,3 +61,19 @@ node tests/palette_browser.cjs /tmp/strio-palette-amber/site /tmp/strio-palette-
 ```
 
 The driver serves the fixtures itself and checks light/dark button, link, focus and tab accents, mode-specific syntax contrast against rendered block/inline backgrounds, shared hue families across project accents and native-search isolation.
+
+For panel corners and nested controls, create and serve the isolated gallery:
+
+```sh
+nix develop --command python3 tests/prepare_footer.py --panels \
+  --output /tmp/strio-panels-check --site-url http://127.0.0.1:8765/
+python3 -m http.server 8765 --bind 127.0.0.1 --directory /tmp/strio-panels-check/site
+```
+
+With `PLAYWRIGHT_CORE` and `CHROMIUM` set as above, run in another terminal:
+
+```sh
+EVIDENCE_DIR=/tmp/strio-panel-results node tests/panels_browser.cjs http://127.0.0.1:8765/panels/
+```
+
+The driver checks fixed 8px enclosures in both modes from 320px to 2000px, joined code/title/line-number/output contours, expandable panels, tabs, scrolling code, copy clearance and keyboard access. Buttons, navigation pills and inline code retain their existing corners. Tabs follow the [official Luma default style](https://github.com/shadcn-ui/ui/blob/main/apps/v4/registry/styles/style-luma.css#L373): a muted capsule rail with a selected capsule, 4px inset, 14px labels and 8px separation from content. The rail is 36px high on desktop and 52px on touch layouts, keeping each native radio label 44px high on touch devices. Tab code panels retain their own 8px corners. Pointer and keyboard selection, visible focus and project-accent focus rings are checked. Gallery and overview screenshots are saved with the measurements. Native-search isolation uses `theme_browser.cjs` above.

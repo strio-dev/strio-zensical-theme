@@ -21,6 +21,8 @@ apps.docs-preview = inputs.strio-theme.lib.mkPreview {
 
 Keep `zensical.toml`, Markdown and your logo in that source. Adapt [Acme’s config](example/zensical.toml). Theme files are staged automatically outside your source tree. Shared CSS and JavaScript URLs include a content hash so browsers cannot mix cached theme assets from different releases. Project settings override defaults; project CSS and scripts follow the shared assets. Set `project.repo_url` and `project.repo_name` to enable the native navbar and drawer repository link.
 
+Header wordmarks use Strio's visible height: about 27px through 600px and 30px above it, with intrinsic width. For an SVG with transparent space inside its viewBox, set the shared theme's `--strio-header-logo-scale` and `--strio-header-logo-shift` in your project `extra_css`, as [Acme does](example/docs/stylesheets/acme.css). Scale is viewBox height divided by visible artwork height; shift is `(viewBox center − artwork center) / viewBox height`, expressed as a percentage. This preserves the asset and its proportions. These variables affect the project header logo; the Strio footer remains 89px wide.
+
 The shared palette uses muted amber for the UI accent. Choose a project hue in `zensical.toml`, as Acme does:
 
 ```toml

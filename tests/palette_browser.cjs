@@ -91,8 +91,14 @@ const startServer = async folder => {
     });
     for(const [name,color] of Object.entries(syntaxTones))assert(contrast(color,expectedSurface)>=4.5,`declared syntax contrast ${name} ${color}`);
     assert.equal(syntaxTones['hl-special'],colorScheme==='light'?'rgb(65, 107, 171)':'rgb(143, 172, 213)');
-    const tabIndicator=await page.locator('.tabbed-labels').first().evaluate(element=>getComputedStyle(element,'::before').backgroundColor);
-    assert.equal(tabIndicator,normal.background);
+    const tabSet=page.locator('.md-content .tabbed-set').first();
+    await tabSet.locator('input').first().focus();
+    const tabFocus=await tabSet.locator('.tabbed-labels label').first().evaluate(element=>{
+     const s=getComputedStyle(element);return {outline:s.outlineColor,style:s.outlineStyle,indicator:getComputedStyle(element.parentElement,'::before').display};
+    });
+    assert.equal(tabFocus.outline,normal.background,'Tab keyboard focus retains the project accent');
+    assert.equal(tabFocus.style,'solid');
+    assert.equal(tabFocus.indicator,'none','Default Luma tabs use a selected capsule without an underline');
     await page.locator('.md-content .highlight').first().screenshot({path:path.join(directory,`${accent}-${colorScheme}-${width}-code.png`)});
     await page.goto(hosts[accent].base+'components/',{waitUntil:'networkidle'});await page.waitForTimeout(220);
     const link = await page.locator('.md-content p a:not(.md-button)').first().evaluate(element=>({color:getComputedStyle(element).color,decoration:getComputedStyle(element).textDecorationColor,style:getComputedStyle(element).textDecorationLine}));

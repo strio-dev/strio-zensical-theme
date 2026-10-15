@@ -244,7 +244,7 @@ async function focusCheck(page, colorScheme) {
       assert(article.tables.length && article.tables.every(size=>size>=14),'Table text below14px');
       assert(article.callouts.length && article.callouts.every(size=>size>=14),'Callout text below14px');
       assert(article.wideCode.length && article.wideCode.every(x=>['auto','scroll'].includes(x)),'Wide code must scroll locally');
-      assert.equal(article.footer.count,1);assert(article.footer.height>=44);assert.equal(article.footer.svgWidth,56);
+      assert.equal(article.footer.count,1);assert(article.footer.height>=44);assert.equal(article.footer.svgWidth,89);
       const focus=await focusCheck(page,colorScheme);
       await page.evaluate(()=>scrollTo(0,0));await page.screenshot({path:path.join(directory,`theme-after-${colorScheme}-${width}.png`),fullPage:true});
       results.push({colorScheme,width,article,focus,searchUnchanged:true,searchPixels,panels:true});await page.close();
