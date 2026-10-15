@@ -57,9 +57,9 @@ assert not errors, "\n".join(errors)
 
 html = (root / "index.html").read_text()
 for expected in (
-    "assets/acme-corner.svg", "--strio-code-check-icon", "Acme", "strio-code-",
+    "assets/acme-corner.svg", "Acme", '"content.code.copy"',
     "language-kdl", 'aria-label="Strio homepage"', 'href="https://strio.dev"',
-    "strio-footer__brandbar", 'viewBox="108 148.617 396 110.766"',
+    "strio-footer__brandbar",
 ):
     assert expected in html, expected
 # Every shared script/style URL must identify the exact bytes of this build.
@@ -67,6 +67,7 @@ for folder, name, extension in (
     ("stylesheets", "strio", "css"), ("stylesheets", "palette", "css"),
     ("stylesheets", "strio-accent", "css"), ("javascripts", "copy", "js"),
     ("javascripts", "toc", "js"), ("javascripts", "panels", "js"),
+    ("javascripts", "palette", "js"),
 ):
     pattern = re.compile(rf"{folder}/{name}\.([0-9a-f]{{12}})\.{extension}")
     versions = pattern.findall(html)

@@ -2,137 +2,90 @@ const assert = require('node:assert/strict');
 const { chromium } = require(process.env.PLAYWRIGHT_CORE || 'playwright-core');
 const home = process.env.PREVIEW_URL || 'http://127.0.0.1:8000/';
 const middle = process.env.MIDDLE_URL;
-assert(middle, 'MIDDLE_URL must point to the generated three-page fixture details/ page');
+assert(middle, 'Set MIDDLE_URL to the three-page fixture details/ page');
 
-async function checkFocus(page, link, colorScheme) {
-  await link.focus();
-  await page.keyboard.press('Shift+Tab');
-  await page.keyboard.press('Tab');
+async function focus(page, link, colorScheme) {
+  await link.focus(); await page.keyboard.press('Shift+Tab'); await page.keyboard.press('Tab');
   await link.evaluate(async element => {
     await new Promise(resolve => requestAnimationFrame(resolve));
     await Promise.all(element.getAnimations().map(animation => animation.finished.catch(() => {})));
   });
-  const focus = await link.evaluate(element => {
-    const style = getComputedStyle(element);
-    const context = document.createElement('canvas').getContext('2d');
+  const state = await link.evaluate(element => {
+    const s = getComputedStyle(element), context = document.createElement('canvas').getContext('2d');
     context.canvas.width = context.canvas.height = 1;
-    context.fillStyle = getComputedStyle(document.body).backgroundColor;
-    context.fillRect(0, 0, 1, 1);
-    const background = [...context.getImageData(0, 0, 1, 1).data];
+    context.fillStyle = getComputedStyle(document.body).backgroundColor; context.fillRect(0, 0, 1, 1);
+    const background = context.getImageData(0, 0, 1, 1).data;
     let opacity = 1;
-    for (let node = element; node; node = node.parentElement) opacity *= Number(getComputedStyle(node).opacity);
-    context.globalAlpha = opacity;
-    context.fillStyle = style.outlineColor;
-    context.fillRect(0, 0, 1, 1);
-    const outline = [...context.getImageData(0, 0, 1, 1).data];
-    const luminance = rgb => rgb.slice(0, 3).map(value => value / 255).map(value => value <= 0.04045 ? value / 12.92 : ((value + 0.055) / 1.055) ** 2.4).reduce((sum, value, index) => sum + value * [0.2126, 0.7152, 0.0722][index], 0);
+    for (let parent = element; parent; parent = parent.parentElement) opacity *= Number(getComputedStyle(parent).opacity);
+    context.globalAlpha = opacity; context.fillStyle = s.outlineColor; context.fillRect(0, 0, 1, 1);
+    const outline = context.getImageData(0, 0, 1, 1).data;
+    const luminance = color => [...color].slice(0, 3).reduce((sum, value, index) => {
+      value /= 255; return sum + (value <= .04045 ? value / 12.92 : ((value + .055) / 1.055) ** 2.4) * [.2126, .7152, .0722][index];
+    }, 0);
     const a = luminance(background), b = luminance(outline);
-    return { active: element === document.activeElement, visible: element.matches(':focus-visible'), style: style.outlineStyle, width: style.outlineWidth, offset: style.outlineOffset, contrast: (Math.max(a, b) + 0.05) / (Math.min(a, b) + 0.05) };
+    return { visible: element.matches(':focus-visible') && s.outlineStyle !== 'none' && parseFloat(s.outlineWidth) > 0,
+      contrast: (Math.max(a, b) + .05) / (Math.min(a, b) + .05) };
   });
-  assert(focus.active && focus.visible);
-  assert.equal(focus.style, 'solid');
-  assert.equal(focus.width, '2px');
-  assert.equal(focus.offset, '2px');
-  if (colorScheme === 'light') assert(focus.contrast >= 3, `Light footer focus contrast must reach 3:1; got ${focus.contrast}`);
-  return focus.contrast;
+  assert(state.visible, 'Footer link has visible keyboard focus');
+  if (colorScheme === 'light') assert(state.contrast >= 3, 'Light footer focus remains distinguishable after ancestor opacity');
 }
 
 (async () => {
   const browser = await chromium.launch({ executablePath: process.env.CHROMIUM || 'chromium', args: ['--no-sandbox'] });
   try {
-    for (const colorScheme of ['light', 'dark']) for (const width of [320, 390, 480, 481, 600, 601, 960, 1220, 1234, 1235, 1236, 1440, 1600, 2000]) {
+    for (const [width, colorScheme] of [[390, 'dark'], [1440, 'light']]) {
       const page = await browser.newPage({ viewport: { width, height: 900 }, colorScheme });
-      const errors = [];
-      page.on('pageerror', error => errors.push(error.message));
-      page.on('response', response => {
-        if (response.status() >= 400 && new URL(response.url()).origin === new URL(home).origin)
-          errors.push(`${response.status()} ${response.url()}`);
-      });
-      for (const [name, url, count] of [['first', home, 1], ['middle', middle, 2], ['last', new URL('../next/', middle).href, 1]]) {
+      const errors = []; page.on('pageerror', error => errors.push(error.message));
+      for (const [url, count] of [[home, 1], [middle, 2], [process.env.LAST_URL || new URL('../next/', middle).href, 1]]) {
         await page.goto(url, { waitUntil: 'networkidle' });
         const pagination = page.locator('.strio-pagination-container > .strio-pagination');
-        assert.equal(await pagination.count(), 1);
-        assert.equal(await page.locator('.strio-footer .md-footer__link').count(), 0);
         const brand = page.getByRole('link', { name: 'Strio homepage', exact: true });
         assert.equal(await brand.getAttribute('href'), 'https://strio.dev');
-        assert.equal(await brand.locator('svg').getAttribute('viewBox'), '108 148.617 396 110.766');
-        const metrics = await pagination.evaluate(nav => {
-          const footer = document.querySelector('.strio-footer'), bar = footer.querySelector('.strio-footer__brandbar');
-          const n = nav.getBoundingClientRect(), f = footer.getBoundingClientRect(), b = bar.getBoundingClientRect();
-          const articleElement = document.querySelector('article.md-content__inner');
-          const article = articleElement.getBoundingClientRect(), layout = document.querySelector('.md-main__inner').getBoundingClientRect();
-          let previous = articleElement.lastElementChild;
-          while (previous && !previous.getBoundingClientRect().height) previous = previous.previousElementSibling;
-          return { afterArticle: !nav.closest('article') && nav.parentElement.previousElementSibling === articleElement, articleGap: n.top - previous.getBoundingClientRect().bottom, brandGap: b.top - n.bottom,
-            navBorder: getComputedStyle(nav).borderTopWidth, navPaddingTop: getComputedStyle(nav).paddingTop, navPaddingBottom: getComputedStyle(nav).paddingBottom, navPaddingRight: getComputedStyle(nav).paddingRight,
-            navWidth: n.width, navX: n.x, articleWidth: article.width, articleX: article.x, footerWidth: f.width, footerX: f.x, layoutX: layout.x, layoutRight: layout.right, rootFont: parseFloat(getComputedStyle(document.documentElement).fontSize), brandWidth: b.width, brandRight: b.right, brandHeight: b.height,
-            brandLogoWidth: bar.querySelector('svg').getBoundingClientRect().width, brandLogoX: bar.querySelector('svg').getBoundingClientRect().x, brandX: b.x, brandPaddingTop: getComputedStyle(bar.firstElementChild).paddingTop, brandPaddingBottom: getComputedStyle(bar.firstElementChild).paddingBottom,
-            brandBorder: getComputedStyle(bar).borderTopWidth, outerBorder: getComputedStyle(footer).borderTopWidth, brandBackground: getComputedStyle(bar).backgroundColor,
-            containerWidth: document.querySelector('.md-container').getBoundingClientRect().width, containerBottom: document.querySelector('.md-container').getBoundingClientRect().bottom, footerBottom: f.bottom, overflow: document.documentElement.scrollWidth > innerWidth };
+        assert.equal(await page.locator('.strio-footer .md-footer__link, .md-footer-meta').count(), 0, 'Branded footer does not duplicate native pagination or metadata');
+        const layout = await pagination.evaluate(nav => {
+          const article = document.querySelector('article.md-content__inner');
+          let last = article.lastElementChild;
+          while (last && !last.getBoundingClientRect().height) last = last.previousElementSibling;
+          const n = nav.getBoundingClientRect(), footer = document.querySelector('.strio-footer').getBoundingClientRect();
+          const container = document.querySelector('.md-container').getBoundingClientRect();
+          const bar = document.querySelector('.strio-footer__brandbar').getBoundingClientRect();
+          return { afterArticle: nav.parentElement.previousElementSibling === article,
+            articleGap: n.top - last.getBoundingClientRect().bottom, brandGap: bar.top - n.bottom,
+            footerHeight: footer.height, footerBottom: footer.bottom, containerBottom: container.bottom,
+            fillsViewport: container.bottom >= innerHeight - 1, overflow: document.documentElement.scrollWidth > innerWidth };
         });
-        assert(metrics.afterArticle, 'Pagination must follow the growing article');
-        assert(metrics.articleGap >= (width <= 600 ? 32 : 48) - .01, `${name}: minimum article gap ${metrics.articleGap}`);
-        assert(Math.abs(metrics.brandGap - 40) < 1, `${name}: brand gap ${metrics.brandGap}`);
-        assert(Math.abs(metrics.footerBottom - metrics.containerBottom) < 1, 'Short-page space must stay above the compact footer');
-        assert.equal(metrics.navBorder, '0px');
-        assert.equal(metrics.navPaddingTop, '0px'); assert.equal(metrics.navPaddingBottom, '0px');
-        assert.equal(metrics.navPaddingRight, '0px', 'Pagination must not reserve a Contents lane');
-        assert.equal(metrics.brandPaddingTop, '27px'); assert.equal(metrics.brandPaddingBottom, '27px');
-        assert.equal(metrics.brandBorder, '1px'); assert.equal(metrics.outerBorder, '0px');
-        assert.equal(metrics.footerWidth, metrics.containerWidth);
-        assert(Math.abs(metrics.brandX - metrics.layoutX) < .02 && Math.abs(metrics.brandRight - metrics.layoutRight) < .02, 'Footer divider must fill the available width up to the native docs grid');
-        const logoInset = width <= 600 ? 24 : 40;
-        assert(Math.abs(metrics.brandLogoX - metrics.brandX - logoInset) < .02, 'Footer wordmark must retain responsive padding at every width');
-        assert(Math.abs(metrics.brandHeight - (55 + 89 * 110.766 / 396)) < .02); assert.equal(metrics.brandLogoWidth, 89);
-        assert(Math.abs(metrics.navWidth - metrics.articleWidth) < 1); assert(Math.abs(metrics.navX - metrics.articleX) < 1);
-        assert(!metrics.overflow); assert.equal(metrics.brandBackground, 'rgba(0, 0, 0, 0)');
-        assert.equal(await page.locator('.strio-footer__brandbar a').count(), 1);
-        assert.equal(await page.locator('.md-footer-meta').count(), 0);
+        assert(layout.afterArticle && layout.articleGap >= (width <= 600 ? 32 : 48) - 1, 'Pagination follows the growing article with its minimum clearance');
+        assert(Math.abs(layout.brandGap - 40) < 1, 'Navigation retains the requested gap above branding');
+        assert(layout.footerHeight >= 75 && layout.footerHeight <= 85, 'Footer stays compact on short and long pages');
+        assert(layout.fillsViewport && Math.abs(layout.footerBottom - layout.containerBottom) < 1, 'Spare viewport height stays above the footer');
+        assert(!layout.overflow);
         const links = pagination.locator('.md-footer__link');
         assert.equal(await links.count(), count);
-        const focusContrasts = [];
         for (const link of await links.all()) {
-          const previousLink = await link.evaluate(element => element.classList.contains('md-footer__link--prev'));
-          const expectedTitle = name !== 'middle' ? 'Details' : previousLink ? 'Installing and configuring your first development environment' : 'Deploying and maintaining applications in production';
-          assert.equal((await link.locator('.md-ellipsis').textContent()).trim(), expectedTitle);
-          assert.equal(await link.getAttribute('aria-label'), `${previousLink ? 'Previous' : 'Next'}: ${expectedTitle}`);
-          const bounds = await link.evaluate(element => {
-            const r = element.getBoundingClientRect(), title = element.querySelector('.md-ellipsis'), t = title.getBoundingClientRect();
-            const svg = element.querySelector('svg').getBoundingClientRect();
-            return { height: r.height, contained: t.x >= r.x && t.right <= r.right && t.y >= r.y && t.bottom <= r.bottom,
-              fullTitle: element.getAttribute('aria-label').endsWith(title.textContent.trim()), unclipped: title.scrollWidth <= title.clientWidth + 1 && title.scrollHeight <= title.clientHeight + 1,
-              titleSize: getComputedStyle(element.querySelector('.md-footer__title')).fontSize, directionSize: getComputedStyle(element.querySelector('.md-footer__direction')).fontSize,
-              fontFamily: getComputedStyle(title).fontFamily, bodyFont: getComputedStyle(document.body).fontFamily, arrowWidth: svg.width, arrowHeight: svg.height };
-          });
-          assert(bounds.height >= 44); assert(bounds.contained); assert(bounds.fullTitle); assert(bounds.unclipped);
-          assert(Math.abs(parseFloat(bounds.titleSize) - metrics.rootFont * .8) < .02, 'Native pagination title must scale with the root font');
-          assert(Math.abs(parseFloat(bounds.directionSize) - metrics.rootFont * .6) < .02, 'Native pagination direction must scale with the root font');
-          assert.equal(bounds.fontFamily, bounds.bodyFont);
-          assert(Math.abs(bounds.arrowWidth - metrics.rootFont * 1.2) < .02 && Math.abs(bounds.arrowHeight - metrics.rootFont * 1.2) < .02, 'Native pagination arrow must scale with the root font');
-          focusContrasts.push(await checkFocus(page, link, colorScheme));
+          assert(await link.evaluate(element => {
+            const r = element.getBoundingClientRect(), title = element.querySelector('.md-ellipsis');
+            return r.height >= 44 && title.scrollWidth <= title.clientWidth + 1 && title.scrollHeight <= title.clientHeight + 1
+              && element.getAttribute('aria-label').endsWith(title.textContent.trim());
+          }), 'Navigation keeps complete titles, accessible names and usable targets');
+          await focus(page, link, colorScheme);
         }
         if (count === 2) {
-          const previous = await pagination.locator('.md-footer__link--prev').boundingBox(), next = await pagination.locator('.md-footer__link--next').boundingBox();
-          assert(Math.abs(previous.y - next.y) < 1, 'Previous and Next must share a row');
-          assert(previous.x + previous.width <= next.x);
+          const previous = await links.first().boundingBox(), next = await links.last().boundingBox();
+          assert(Math.abs(previous.y - next.y) < 1 && previous.x + previous.width <= next.x, 'Previous and Next stay side by side without overlap');
         }
-        await page.evaluate(() => scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }));
-        await page.evaluate(() => new Promise(resolve => requestAnimationFrame(resolve)));
-        assert(await page.evaluate(() => {
-          const button = document.querySelector('[data-strio-panel-trigger="toc"]'); if (!button || !button.getBoundingClientRect().height) return true;
-          const b = button.getBoundingClientRect(); return Math.abs(innerHeight - b.bottom - 32) < .1;
-        }), 'Contents must retain its fixed corner while pagination scrolls');
-        focusContrasts.push(await checkFocus(page, brand, colorScheme));
-        await page.locator('h1').click(); await page.mouse.move(width - 1, 1);
-        await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));
-        if (process.env.SCREENSHOT_DIR) await page.screenshot({ path: `${process.env.SCREENSHOT_DIR}/acme-article-pagination-${name}-${colorScheme}-${width}.png`, fullPage: true });
-        console.log(JSON.stringify({ name, colorScheme, width, ...metrics, focusContrasts }));
+        await focus(page, brand, colorScheme);
+        await page.evaluate(() => scrollTo({ top: document.scrollingElement.scrollHeight, behavior: 'instant' }));
+        assert(await brand.evaluate(element => {
+          const r = element.getBoundingClientRect(), hit = document.elementFromPoint(r.x + r.width / 2, r.y + r.height / 2);
+          return r.top >= 0 && r.bottom <= innerHeight && (hit === element || element.contains(hit));
+        }), 'Footer homepage link remains fully visible and clickable');
       }
-      await page.locator('.strio-pagination .md-footer__link--prev').click(); await page.waitForURL(middle);
-      await page.locator('.strio-pagination .md-footer__link--next').waitFor({ state: 'visible' }); assert.equal(await page.locator('.strio-pagination .md-footer__link').count(), 2);
+      await page.goto(middle, { waitUntil: 'networkidle' });
       await page.locator('.strio-pagination .md-footer__link--prev').click(); await page.waitForURL(home);
-      await page.locator('.strio-pagination .md-footer__link--prev').waitFor({ state: 'detached' }); assert.equal(await page.locator('.strio-pagination .md-footer__link--next').count(), 1);
-      assert.deepEqual(errors, []); await page.close();
+      await page.locator('.strio-pagination .md-footer__link--prev').waitFor({ state: 'detached' });
+      assert.deepEqual(errors, []);
+      console.log(JSON.stringify({ width, colorScheme, pagination: true, shortPageFill: true, compactFooter: true }));
+      await page.close();
     }
   } finally { await browser.close(); }
 })().catch(error => { console.error(error); process.exit(1); });

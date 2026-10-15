@@ -86,6 +86,10 @@ def source_filters(source, selected):
     return [*(f"--include={pattern}" for pattern in sorted(included)), "--exclude=*"]
 
 
+def sync(source, destination, *options):
+    subprocess.run(["rsync", "-rtpL", "--chmod=Du+rwx,Fu+rw", *options,
+                    f"{source}/", f"{destination}/"], check=True)
+
 
 def fingerprint_assets(project, docs, theme_assets, accent_css):
     """Version shared URLs by content so new HTML cannot reuse old theme CSS/JS."""
@@ -139,8 +143,8 @@ def main():
     custom_path = project_path(config_path.parent, custom, source) if custom else None
     if custom_path:
         require_selected(custom_path, selected)
-    if custom_path and not custom_path.is_dir():
-        raise ValueError(f"Template override directory does not exist: {custom_path}")
+        if not custom_path.is_dir():
+            raise ValueError(f"Template override directory does not exist: {custom_path}")
     for asset in (args.theme / "assets").rglob("*"):
         if asset.is_file() and (docs / asset.relative_to(args.theme / "assets")).exists():
             raise ValueError(f"Shared theme asset is already in the project source: {asset.relative_to(args.theme / 'assets')}")
@@ -159,34 +163,30 @@ def main():
 
     if args.validate_only:
         return
-    output.mkdir(parents=True, exist_ok=True)
     staged = output / "source"
-    staged.mkdir(exist_ok=True)
+    staged.mkdir(parents=True, exist_ok=True)
     site_dir = project.get("site_dir", "site")
     site_path = project_path(config_path.parent, site_dir, source)
     output_site = config_path.parent.relative_to(source) / "site"
-    subprocess.run([
-        "rsync", "-aL", "--delete", "--exclude=/.git/",
+    sync(source, staged, "--delete", "--exclude=/.git/",
         *(["--checksum"] if selected is not None else []),
         f"--exclude=/{config_path.relative_to(source)}",
         f"--exclude=/{output_site}/",
         f"--exclude=/{site_path.relative_to(source)}/",
-        *source_filters(source, selected), f"{source}/", f"{staged}/",
-    ], check=True)
-    subprocess.run(["chmod", "-R", "u+w", str(staged)], check=True)
+        *source_filters(source, selected))
     staged_docs = staged / docs.relative_to(source)
-    subprocess.run(["rsync", "-rtp", "--chmod=Du+rwx,Fu+rw", f"{args.theme / 'assets'}/", f"{staged_docs}/"], check=True)
+    sync(args.theme / "assets", staged_docs)
     configure(project, staged_docs)
     fingerprint_assets(project, staged_docs, args.theme / "assets", ACCENT_CSS)
     licenses = staged_docs / "licenses/strio"
     licenses.mkdir(parents=True, exist_ok=True)
-    subprocess.run(["rsync", "-rtp", "--chmod=Du+rwx,Fu+rw", f"{args.theme / 'licenses'}/", f"{licenses}/"], check=True)
+    sync(args.theme / "licenses", licenses)
     shutil.copyfile(args.theme / "LICENSE", licenses / "LICENSE")
     overrides = output / "overrides"
     overrides.mkdir(exist_ok=True)
-    subprocess.run(["rsync", "-rtp", "--chmod=Du+rwx,Fu+rw", "--delete", f"{args.theme / 'overrides'}/", f"{overrides}/"], check=True)
+    sync(args.theme / "overrides", overrides, "--delete")
     if custom_path:
-        subprocess.run(["rsync", "-rtp", "--chmod=Du+rwx,Fu+rw", f"{staged / custom_path.relative_to(source)}/", f"{overrides}/"], check=True)
+        sync(staged / custom_path.relative_to(source), overrides)
     project["site_dir"] = "site"
     project["theme"]["custom_dir"] = str(overrides)
     generated_config = staged / config_path.relative_to(source)
@@ -194,7 +194,6 @@ def main():
     temporary_config = generated_config.with_name(generated_config.name + ".tmp")
     temporary_config.write_text(tomli_w.dumps(config))
     temporary_config.replace(generated_config)
-
 
 
 if __name__ == "__main__":

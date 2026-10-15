@@ -1,5 +1,5 @@
-/* Keep the supplied paths and viewBox; compensate for their transparent space. */
+/* Align Acme lettering with the homepage wordmark ink, preserving the SVG geometry. */
 :root {
-  --strio-header-logo-scale: 1.083916;
+  --strio-header-logo-scale: 1.027874;
   --strio-header-logo-shift: .483870%;
 }
