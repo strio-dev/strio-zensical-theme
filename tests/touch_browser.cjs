@@ -118,20 +118,15 @@ async function footerClearance(page) {
       return {
         scroll: scrollY, viewportHeight: innerHeight,
         toc: rect('[data-strio-panel-trigger="toc"]'),
-        brand: rect('.strio-footer__brandbar'),
+        brand: rect('.strio-footer-brand'),
         actions: [...document.querySelectorAll('.strio-pagination:not([hidden]) .md-footer__link')]
           .map(element => ({ text: element.textContent.trim(), rect: element.getBoundingClientRect().toJSON() })),
       };
     });
     assert.equal(sample.toc.width, 38); assert.equal(sample.toc.height, 38);
-    const boundary = Math.min(sample.brand.top, ...sample.actions
-      .filter(item => item.rect.left < sample.toc.right && item.rect.right > sample.toc.left)
-      .map(item => item.rect.top));
-    const expectedBottom = Math.min(sample.viewportHeight - 32, boundary - 5);
-    assert(Math.abs(sample.toc.bottom - expectedBottom) < .01,
-      'Contents control must retain its corner anchor or track the footer boundary exactly');
-    assert(sample.toc.bottom <= sample.brand.top - 4.99, 'Contents control crosses footer divider');
-    noOverlap([{ text: 'contents', rect: sample.toc }, ...sample.actions], 'Contents/footer actions');
+    assert(Math.abs(sample.toc.bottom - (sample.viewportHeight - 32)) < .01,
+      'Contents control must stay in the fixed bottom corner');
+    noOverlap([{ text: 'contents', rect: sample.toc }, { text: 'Strio homepage', rect: sample.brand }, ...sample.actions], 'Contents/footer actions');
     samples.push(sample);
   }
   await page.evaluate(async () => {

@@ -14,14 +14,6 @@
   /* Painted extent of Strio's 16px Lucide sun; palette icons share its box size. */
   --strio-header-icon-extent: 14.666667px;
 }
-/* Experimental iPhone Safari overflow candidate; toolbar behavior still needs device A/B.
-   Change horizontal clipping only. Native modal locks retain their own body position,
-   scroll offset and any inline overflow declarations. */
-@supports (overflow-x: clip) {
-  @media (max-width: 59.984375em) {
-    html { overflow-x: clip; }
-  }
-}
 [data-md-color-scheme="default"] {
   --md-primary-fg-color: #111;
   --md-primary-bg-color: #fff;
@@ -305,7 +297,7 @@
 .md-sidebar--secondary .md-nav__link:focus-visible { outline: 2px solid var(--strio-button-ring); outline-offset: -2px; }
 
 @media (max-width: 59.984375em) {
-  .md-sidebar--secondary { bottom: max(1.6rem, var(--strio-toc-footer-offset, 0px)); transition: none; }
+  .md-sidebar--secondary { bottom: 1.6rem; transition: none; }
   /* Adapt shadcn's anchored popover fade/95% zoom to the native checkbox. */
   .md-sidebar--secondary .md-sidebar__inner,
   .md-sidebar--secondary [type="checkbox"]:checked ~ .md-sidebar__inner {
@@ -363,9 +355,8 @@
   .md-typeset .md-footer__inner.strio-pagination { grid-template-columns: minmax(0, 1fr); gap: 16px; }
   .strio-pagination .md-footer__link { grid-column: 1; }
 }
-/* A short screen needs a lane beside stacked pagination for the native control.
-   Its physical right anchor stays unchanged; the footer still supplies clearance. */
-@media (max-width: 59.984375em) and (max-height: 400px) {
+/* Reserve a right-hand lane so pagination scrolls past the fixed Contents control. */
+@media (max-width: 59.984375em) {
   .md-typeset .md-footer__inner.strio-pagination { padding-right: 54px; }
 }
 /* Empty native metadata has no surface when branding is disabled. */
@@ -418,8 +409,9 @@
 @media (max-width: 59.984375em) {
   .md-sidebar--secondary .strio-panel-close:not([hidden]) { display: grid; }
   .md-sidebar--secondary .md-sidebar__inner {
-    bottom: var(--strio-toc-popup-bottom, 2.7rem);
-    right: var(--strio-toc-popup-right, 0px);
+    bottom: 2.7rem;
+    right: 0;
+    max-height: min(50vh, calc(100dvh - var(--strio-header-height) - 4.7rem));
     display: flex;
     flex-direction: column;
     overflow: hidden;
