@@ -324,7 +324,6 @@ body {
 }
 
 /* Article-ending pagination and a separate Strio brand row. */
-.md-container:has(.strio-pagination:not([hidden])) .md-main { flex-grow: 0; }
 .md-main__inner:has(.strio-pagination:not([hidden])) { margin-bottom: 40px; }
 .md-content__inner:has(> .strio-pagination:not([hidden])) { margin-bottom: 0; }
 .md-typeset .md-footer__inner.strio-pagination { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; width: 100%; max-width: none; margin: 48px 0 0; padding: 0; border: 0; overflow: visible; }
