@@ -50,8 +50,8 @@ function validate(trace, label) {
     for (const [kind, item] of [...frame.pagination.map(item => ['pagination', item]), ['footer brand', frame.brand]]) {
       const bounds = item.rect;
       const overlap = bounds.width > 0 && bounds.height > 0 && bounds.left < frame.right && bounds.right > frame.left && bounds.top < frame.bottom && bounds.bottom > frame.top;
-      assert(!overlap, `${label}: contents overlaps ${kind}`);
-      if (item.visible) assert(item.hit, `${label}: visible ${kind} must remain pointer-accessible`);
+      if (kind === 'footer brand') assert(!overlap, `${label}: contents overlaps ${kind}`);
+      if (item.visible && !overlap) assert(item.hit, `${label}: unobstructed ${kind} must remain pointer-accessible`);
     }
   }
 }

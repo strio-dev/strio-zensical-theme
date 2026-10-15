@@ -1,5 +1,9 @@
 {% extends "base.html" %}
 
+{% block site_meta %}
+  {{ super() | replace('content="width=device-width,initial-scale=1"', 'content="width=device-width,initial-scale=1,viewport-fit=cover"') }}
+{% endblock %}
+
 {% block extrahead %}
   {{ super() }}
   {% import ".icons/lucide/copy.svg" as copy_icon %}

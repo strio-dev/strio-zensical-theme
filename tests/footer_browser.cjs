@@ -63,7 +63,7 @@ async function checkFocus(page, link, colorScheme) {
           let previous = nav.previousElementSibling;
           while (previous && !previous.getBoundingClientRect().height) previous = previous.previousElementSibling;
           return { inArticle: !nav.closest('footer'), articleGap: n.top - previous.getBoundingClientRect().bottom, brandGap: b.top - n.bottom,
-            navBorder: getComputedStyle(nav).borderTopWidth, navPaddingTop: getComputedStyle(nav).paddingTop, navPaddingBottom: getComputedStyle(nav).paddingBottom,
+            navBorder: getComputedStyle(nav).borderTopWidth, navPaddingTop: getComputedStyle(nav).paddingTop, navPaddingBottom: getComputedStyle(nav).paddingBottom, navPaddingRight: getComputedStyle(nav).paddingRight,
             navWidth: n.width, navX: n.x, articleWidth: article.width, articleX: article.x, footerWidth: f.width, footerX: f.x, layoutX: layout.x, layoutRight: layout.right, rootFont: parseFloat(getComputedStyle(document.documentElement).fontSize), brandWidth: b.width, brandRight: b.right, brandHeight: b.height,
             brandLogoWidth: bar.querySelector('svg').getBoundingClientRect().width, brandLogoX: bar.querySelector('svg').getBoundingClientRect().x, brandX: b.x, brandPaddingTop: getComputedStyle(bar.firstElementChild).paddingTop, brandPaddingBottom: getComputedStyle(bar.firstElementChild).paddingBottom,
             brandBorder: getComputedStyle(bar).borderTopWidth, outerBorder: getComputedStyle(footer).borderTopWidth, brandBackground: getComputedStyle(bar).backgroundColor,
@@ -74,6 +74,7 @@ async function checkFocus(page, link, colorScheme) {
         assert(Math.abs(metrics.brandGap - 40) < 1, `${name}: brand gap ${metrics.brandGap}`);
         assert.equal(metrics.navBorder, '0px');
         assert.equal(metrics.navPaddingTop, '0px'); assert.equal(metrics.navPaddingBottom, '0px');
+        assert.equal(metrics.navPaddingRight, '0px', 'Pagination must not reserve a Contents lane');
         assert.equal(metrics.brandPaddingTop, '27px'); assert.equal(metrics.brandPaddingBottom, '27px');
         assert.equal(metrics.brandBorder, '1px'); assert.equal(metrics.outerBorder, '0px');
         assert.equal(metrics.footerWidth, metrics.containerWidth);
@@ -110,20 +111,15 @@ async function checkFocus(page, link, colorScheme) {
         }
         if (count === 2) {
           const previous = await pagination.locator('.md-footer__link--prev').boundingBox(), next = await pagination.locator('.md-footer__link--next').boundingBox();
-          if (width <= 480) {
-            assert(Math.abs(previous.x - next.x) < 1);
-            assert(Math.abs(next.y - previous.y - previous.height - 16) < 1);
-            assert(Math.abs(previous.width - metrics.navWidth) < 1 && Math.abs(next.width - metrics.navWidth) < 1);
-          } else assert(previous.x + previous.width <= next.x);
+          assert(Math.abs(previous.y - next.y) < 1, 'Previous and Next must share a row');
+          assert(previous.x + previous.width <= next.x);
         }
         await page.evaluate(() => scrollTo({ top: document.documentElement.scrollHeight, behavior: 'instant' }));
         await page.evaluate(() => new Promise(resolve => requestAnimationFrame(resolve)));
         assert(await page.evaluate(() => {
-          const button = document.querySelector('.md-sidebar-button'); if (!button || !button.getBoundingClientRect().height) return true;
-          const b = button.getBoundingClientRect(); return [...document.querySelectorAll('.strio-pagination .md-footer__link')].every(element => {
-            const r = element.getBoundingClientRect(); return r.bottom <= b.top || r.top >= b.bottom || r.right <= b.left || r.left >= b.right;
-          });
-        }), 'Floating contents button must clear pagination');
+          const button = document.querySelector('[data-strio-panel-trigger="toc"]'); if (!button || !button.getBoundingClientRect().height) return true;
+          const b = button.getBoundingClientRect(); return Math.abs(innerHeight - b.bottom - 32) < .1;
+        }), 'Contents must retain its fixed corner while pagination scrolls');
         focusContrasts.push(await checkFocus(page, brand, colorScheme));
         await page.locator('h1').click(); await page.mouse.move(width - 1, 1);
         await page.evaluate(() => scrollTo({ top: 0, behavior: 'instant' }));

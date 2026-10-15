@@ -21,7 +21,8 @@ function snapshot() {
   const body = getComputedStyle(document.body), header = getComputedStyle(document.querySelector('.md-header'));
   return {
     metas: metas.map(meta => ({ content: meta.content, media: meta.media, active: active.includes(meta) })),
-    background: body.backgroundColor, scheme: document.body.dataset.mdColorScheme,
+    background: body.backgroundColor, rootBackground: getComputedStyle(document.documentElement).backgroundColor, scheme: document.body.dataset.mdColorScheme,
+    viewport: [...document.querySelectorAll('meta[name="viewport"]')].map(meta => meta.content),
     headerBackground: header.backgroundColor, colorScheme: header.colorScheme,
     nativeColorScheme: document.querySelector('meta[name="color-scheme"]').content,
     saved: __md_get('__palette'),
@@ -43,6 +44,8 @@ async function check(page, expected) {
   const dark = state.scheme === 'slate';
   assert.equal(active[0].content, dark ? '#151515' : '#ffffff');
   assert.equal(state.background, dark ? 'rgb(21, 21, 21)' : 'rgb(255, 255, 255)');
+  assert.equal(state.rootBackground, state.background, 'Root and body must paint the same opaque palette surface');
+  assert.deepEqual(state.viewport, ['width=device-width,initial-scale=1,viewport-fit=cover']);
   if (expected) assert.equal(state.scheme, expected);
   assert.equal(state.metas.length, 2, 'Native tint is retained alongside one owned tint');
   const native = state.metas.find(meta => meta.media === 'not all');

@@ -6,13 +6,20 @@
   --strio-radius: .5rem;
   /* Panel corners stay consistent when the native root font size increases. */
   --strio-panel-radius: 8px;
-  --strio-header-height: 64px;
+  --strio-header-height: calc(64px + env(safe-area-inset-top, 0px));
   /* Strio's 108px header wordmark has this visible height. */
   --strio-header-logo-height: 30.203125px;
   --strio-header-logo-scale: 1;
   --strio-header-logo-shift: 0%;
   /* Painted extent of Strio's 16px Lucide sun; palette icons share its box size. */
   --strio-header-icon-extent: 14.666667px;
+}
+html { background-color: #fff; }
+html:has(body[data-md-color-scheme="slate"]) { background-color: #151515; }
+body {
+  padding-left: env(safe-area-inset-left, 0px);
+  padding-right: env(safe-area-inset-right, 0px);
+  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 [data-md-color-scheme="default"] {
   --md-primary-fg-color: #111;
@@ -112,7 +119,7 @@
 .md-typeset .md-button--primary:hover { background: color-mix(in srgb, var(--strio-button-bg) 80%, transparent); }
 .md-typeset .md-button:focus-visible { outline: none; box-shadow: inset 0 0 0 1px var(--strio-button-ring), 0 0 0 3px color-mix(in oklab, var(--strio-button-ring) 30%, transparent); }
 /* A 64px title bar matches Strio; native JavaScript measures this box for sticky offsets. */
-.md-header__inner { height: var(--strio-header-height); min-height: var(--strio-header-height); }
+.md-header__inner { height: var(--strio-header-height); min-height: var(--strio-header-height); padding-top: env(safe-area-inset-top, 0px); }
 /* Retain the native anchor gap and heading-specific scroll offsets below the taller bar. */
 .md-typeset :target { --md-scroll-margin: calc(var(--strio-header-height) + 1.2rem); }
 @media screen and (min-width: 60em) {
@@ -271,9 +278,11 @@
 
 /* Luma mobile navigation uses a side sheet; retain the native translucent surface. */
 @media (max-width: 76.234375em) {
-  .md-sidebar--primary { top: 0; width: min(14.4rem, 100%); height: 100%; padding: 0; border-radius: 0; }
+  .md-sidebar--primary { top: env(safe-area-inset-top, 0px); width: min(14.4rem, 100%); height: calc(100% - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px)); padding: 0; border-radius: 0; }
   [dir="ltr"] .md-sidebar--primary { left: 0; right: auto; border-left: 0; border-right: 1px solid var(--md-default-fg-color--lightest); transform: translateX(-100%); }
   [dir="rtl"] .md-sidebar--primary { left: auto; right: 0; border-left: 1px solid var(--md-default-fg-color--lightest); border-right: 0; transform: translateX(100%); }
+  [dir="ltr"] .md-sidebar--primary .md-sidebar__scrollwrap { padding-left: env(safe-area-inset-left, 0px); }
+  [dir="rtl"] .md-sidebar--primary .md-sidebar__scrollwrap { padding-right: env(safe-area-inset-right, 0px); }
   [dir] [data-md-toggle="drawer"]:checked ~ .md-container .md-sidebar--primary { transform: translateX(0); }
   .md-sidebar--primary .md-nav--primary { margin: 0; }
   .md-sidebar--primary .md-nav--primary > .md-nav__title,
@@ -297,7 +306,7 @@
 .md-sidebar--secondary .md-nav__link:focus-visible { outline: 2px solid var(--strio-button-ring); outline-offset: -2px; }
 
 @media (max-width: 59.984375em) {
-  .md-sidebar--secondary { bottom: 1.6rem; transition: none; }
+  .md-sidebar--secondary { bottom: calc(1.6rem + env(safe-area-inset-bottom, 0px)); right: calc(.8rem + env(safe-area-inset-right, 0px)); transition: none; }
   /* Adapt shadcn's anchored popover fade/95% zoom to the native checkbox. */
   .md-sidebar--secondary .md-sidebar__inner,
   .md-sidebar--secondary [type="checkbox"]:checked ~ .md-sidebar__inner {
@@ -351,14 +360,6 @@
 [data-md-color-scheme="default"] .strio-pagination a:focus-visible,
 [data-md-color-scheme="default"] .strio-footer a:focus-visible { outline-color: var(--md-default-fg-color--light); }
 @media (max-width: 600px) { .md-typeset .md-footer__inner.strio-pagination { margin-top: 32px; } }
-@media (max-width: 480px) {
-  .md-typeset .md-footer__inner.strio-pagination { grid-template-columns: minmax(0, 1fr); gap: 16px; }
-  .strio-pagination .md-footer__link { grid-column: 1; }
-}
-/* Reserve a right-hand lane so pagination scrolls past the fixed Contents control. */
-@media (max-width: 59.984375em) {
-  .md-typeset .md-footer__inner.strio-pagination { padding-right: 54px; }
-}
 /* Empty native metadata has no surface when branding is disabled. */
 .md-footer-meta:has(.md-copyright):not(:has(.md-copyright > *, .md-social)) { display: none; }
 
@@ -411,7 +412,7 @@
   .md-sidebar--secondary .md-sidebar__inner {
     bottom: 2.7rem;
     right: 0;
-    max-height: min(50vh, calc(100dvh - var(--strio-header-height) - 4.7rem));
+    max-height: min(50vh, calc(100dvh - var(--strio-header-height) - 4.7rem - env(safe-area-inset-bottom, 0px)));
     display: flex;
     flex-direction: column;
     overflow: hidden;
