@@ -1,5 +1,5 @@
 /* Match Strio's lowercase letter bodies; scale the approved Acme lockup uniformly. */
 :root {
   --strio-header-logo-scale: .781863;
-  --strio-header-logo-shift: 16%;
+  --strio-header-logo-shift: .483870%;
 }
