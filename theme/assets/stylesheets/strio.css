@@ -323,9 +323,13 @@ body {
   .md-sidebar--secondary .md-nav__title { padding: 0; margin: 0 .4rem .8rem; font-size: .8rem; font-weight: 500; line-height: 1.2rem; }
 }
 
-/* Article-ending pagination and a separate Strio brand row. */
-.md-main__inner:has(.strio-pagination:not([hidden])) { margin-bottom: 40px; }
-.md-content__inner:has(> .strio-pagination:not([hidden])) { margin-bottom: 0; }
+/* Let the article absorb spare height above pagination and the Strio brand row. */
+.md-main:has(.strio-pagination:not([hidden])) { display: flex; flex-direction: column; }
+.md-main__inner:has(.strio-pagination:not([hidden])) { flex-grow: 1; width: 100%; height: auto; margin-bottom: 40px; }
+.md-content:has(> .strio-pagination-container > .strio-pagination:not([hidden])) { display: flex; flex-direction: column; }
+.md-content:has(> .strio-pagination-container > .strio-pagination:not([hidden])) > article { flex-grow: 1; margin-bottom: 0; }
+.strio-pagination-container { padding-top: 0; margin-bottom: 0; }
+.strio-pagination-container:not(:has(.strio-pagination:not([hidden]))) { display: none; }
 .md-typeset .md-footer__inner.strio-pagination { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; align-items: start; width: 100%; max-width: none; margin: 48px 0 0; padding: 0; border: 0; overflow: visible; }
 .md-typeset .md-footer__inner.strio-pagination[hidden] { display: none; }
 .strio-pagination .md-footer__link { min-width: 0; min-height: 44px; max-width: none; margin: 0; align-items: center; gap: 8px; overflow: visible; }

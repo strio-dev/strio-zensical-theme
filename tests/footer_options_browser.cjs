@@ -26,7 +26,7 @@ assert(cases.every(([, url]) => url), 'Set HIDDEN_URL, NATIVE_URL and EMPTY_URL 
         assert.equal(await pagination.count(), 1);
         assert(await pagination.locator('.md-footer__link').count() > 0);
         if (name === 'hidden') {
-          assert.equal(await page.locator('.md-content__inner > .strio-pagination').count(), 1);
+          assert.equal(await page.locator('.strio-pagination-container > .strio-pagination').count(), 1);
           assert.equal(await page.locator('.strio-footer .md-footer__link').count(), 0);
           assert.equal(await pagination.getAttribute('hidden'), '');
           assert(!(await pagination.isVisible()), 'hide/footer must hide pagination');

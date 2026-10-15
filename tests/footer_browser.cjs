@@ -50,7 +50,7 @@ async function checkFocus(page, link, colorScheme) {
       });
       for (const [name, url, count] of [['first', home, 1], ['middle', middle, 2], ['last', new URL('../next/', middle).href, 1]]) {
         await page.goto(url, { waitUntil: 'networkidle' });
-        const pagination = page.locator('.md-content__inner > .strio-pagination');
+        const pagination = page.locator('.strio-pagination-container > .strio-pagination');
         assert.equal(await pagination.count(), 1);
         assert.equal(await page.locator('.strio-footer .md-footer__link').count(), 0);
         const brand = page.getByRole('link', { name: 'Strio homepage', exact: true });
@@ -59,19 +59,20 @@ async function checkFocus(page, link, colorScheme) {
         const metrics = await pagination.evaluate(nav => {
           const footer = document.querySelector('.strio-footer'), bar = footer.querySelector('.strio-footer__brandbar');
           const n = nav.getBoundingClientRect(), f = footer.getBoundingClientRect(), b = bar.getBoundingClientRect();
-          const article = nav.parentElement.getBoundingClientRect(), layout = document.querySelector('.md-main__inner').getBoundingClientRect();
-          let previous = nav.previousElementSibling;
+          const articleElement = document.querySelector('article.md-content__inner');
+          const article = articleElement.getBoundingClientRect(), layout = document.querySelector('.md-main__inner').getBoundingClientRect();
+          let previous = articleElement.lastElementChild;
           while (previous && !previous.getBoundingClientRect().height) previous = previous.previousElementSibling;
-          return { inArticle: !nav.closest('footer'), articleGap: n.top - previous.getBoundingClientRect().bottom, brandGap: b.top - n.bottom,
+          return { afterArticle: !nav.closest('article') && nav.parentElement.previousElementSibling === articleElement, articleGap: n.top - previous.getBoundingClientRect().bottom, brandGap: b.top - n.bottom,
             navBorder: getComputedStyle(nav).borderTopWidth, navPaddingTop: getComputedStyle(nav).paddingTop, navPaddingBottom: getComputedStyle(nav).paddingBottom, navPaddingRight: getComputedStyle(nav).paddingRight,
             navWidth: n.width, navX: n.x, articleWidth: article.width, articleX: article.x, footerWidth: f.width, footerX: f.x, layoutX: layout.x, layoutRight: layout.right, rootFont: parseFloat(getComputedStyle(document.documentElement).fontSize), brandWidth: b.width, brandRight: b.right, brandHeight: b.height,
             brandLogoWidth: bar.querySelector('svg').getBoundingClientRect().width, brandLogoX: bar.querySelector('svg').getBoundingClientRect().x, brandX: b.x, brandPaddingTop: getComputedStyle(bar.firstElementChild).paddingTop, brandPaddingBottom: getComputedStyle(bar.firstElementChild).paddingBottom,
             brandBorder: getComputedStyle(bar).borderTopWidth, outerBorder: getComputedStyle(footer).borderTopWidth, brandBackground: getComputedStyle(bar).backgroundColor,
             containerWidth: document.querySelector('.md-container').getBoundingClientRect().width, containerBottom: document.querySelector('.md-container').getBoundingClientRect().bottom, footerBottom: f.bottom, overflow: document.documentElement.scrollWidth > innerWidth };
         });
-        assert(metrics.inArticle);
-        assert(Math.abs(metrics.articleGap - (width <= 600 ? 32 : 48)) < 1, `${name}: article gap ${metrics.articleGap}`);
-        assert(metrics.brandGap >= 39.99, `${name}: minimum brand gap ${metrics.brandGap}`);
+        assert(metrics.afterArticle, 'Pagination must follow the growing article');
+        assert(metrics.articleGap >= (width <= 600 ? 32 : 48) - .01, `${name}: minimum article gap ${metrics.articleGap}`);
+        assert(Math.abs(metrics.brandGap - 40) < 1, `${name}: brand gap ${metrics.brandGap}`);
         assert(Math.abs(metrics.footerBottom - metrics.containerBottom) < 1, 'Short-page space must stay above the compact footer');
         assert.equal(metrics.navBorder, '0px');
         assert.equal(metrics.navPaddingTop, '0px'); assert.equal(metrics.navPaddingBottom, '0px');

@@ -29,9 +29,11 @@
     {% endif %}
     <article class="md-content__inner md-typeset">
       {{ self.content() }}
-      {% if config.extra.strio_footer | default(true) %}
-        {% include "partials/pagination.html" %}
-      {% endif %}
     </article>
+    {% if config.extra.strio_footer | default(true) %}
+      <div class="md-content__inner md-typeset strio-pagination-container">
+        {% include "partials/pagination.html" %}
+      </div>
+    {% endif %}
   </div>
 {% endblock %}
