@@ -1,6 +1,6 @@
 [project]
 extra_css = ["stylesheets/strio.css", "stylesheets/palette.css"]
-extra_javascript = ["javascripts/copy.js", "javascripts/toc.js", "javascripts/panels.js"]
+extra_javascript = ["javascripts/copy.js", "javascripts/toc.js", "javascripts/panels.js", "javascripts/palette.js"]
 
 [project.extra]
 generator = false

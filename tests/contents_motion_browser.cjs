@@ -22,10 +22,6 @@ function read() {
   const trigger = sidebar.querySelector('[data-strio-panel-trigger="toc"]');
   const style = getComputedStyle(popup), rect = trigger.getBoundingClientRect();
   const matrix = style.transform === 'none' ? new DOMMatrixReadOnly() : new DOMMatrixReadOnly(style.transform);
-  const brand = document.querySelector('.strio-footer__brandbar').getBoundingClientRect();
-  const obstacles = [...document.querySelectorAll('.strio-pagination:not([hidden]) .md-footer__link')]
-    .map(element => element.getBoundingClientRect()).filter(bounds => bounds.width && bounds.height && bounds.left < rect.right && bounds.right > rect.left);
-  const boundary = Math.min(brand.top, ...obstacles.map(bounds => bounds.top));
   const hit = document.elementFromPoint(rect.x + rect.width / 2, rect.y + rect.height / 2);
   return {
     time: performance.now(), checked: document.querySelector('#__toc').checked,
@@ -34,7 +30,7 @@ function read() {
     durations: style.transitionDuration, pointerEvents: style.pointerEvents, inert: popup.inert,
     popup: popup.getBoundingClientRect().toJSON(), offsetHeight: popup.offsetHeight, offsetWidth: popup.offsetWidth,
     trigger: rect.toJSON(), header: document.querySelector('.md-header').getBoundingClientRect().toJSON(),
-    expectedBottom: Math.min(innerHeight - 32, boundary - 5), triggerHit: hit === trigger || trigger.contains(hit),
+    expectedBottom: innerHeight - 32, triggerHit: hit === trigger || trigger.contains(hit),
     activeInside: popup.contains(document.activeElement), sidebarTransition: getComputedStyle(sidebar).transitionDuration,
     radius: style.borderRadius, scroll: scrollY, viewportWidth: innerWidth, viewportHeight: innerHeight,
   };
@@ -68,7 +64,7 @@ function geometry(frames, label) {
     near(frame.trigger.height, 38, `${label}: trigger height`);
     near(frame.trigger.right, first.trigger.right, `${label}: trigger horizontal drift`);
     near(frame.trigger.top, first.trigger.top, `${label}: trigger vertical drift`);
-    near(frame.trigger.bottom, frame.expectedBottom, `${label}: footer collision tracking`);
+    near(frame.trigger.bottom, frame.expectedBottom, `${label}: fixed corner inset`);
     assert.equal(frame.sidebarTransition, '0s', `${label}: trigger container position animation`);
     assert(frame.triggerHit, `${label}: trigger covered during motion`);
     assert.equal(frame.offsetHeight, first.offsetHeight, `${label}: transformed popup changes measured layout height`);

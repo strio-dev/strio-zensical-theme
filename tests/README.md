@@ -32,17 +32,17 @@ Run the focused touch checks against the same `--theme` fixture:
 node tests/touch_browser.cjs http://127.0.0.1:8765/
 ```
 
-Four light/dark mobile/desktop states check 44px action, copy and drawer navigation rows, control-group overlap, keyboard activation, code-copy clearance and compact desktop sizes. The drawer wordmark retains Coopr’s 120px width, intrinsic height and 8px title padding; it is exempt from the 44px target check. The pinned native contents trigger retains its 38px size and floating placement. It stays 32px above the viewport bottom until footer branding or pagination reaches it, then tracks that boundary with 5px clearance and no position transition. The popup adapts the [official shadcn popover motion](https://github.com/shadcn-ui/ui/blob/main/apps/v4/registry/new-york-v4/ui/popover.tsx): a 150ms ease-out fade and 95% zoom from an 8px lower pose, anchored to its bottom-right corner. Opening and closing remain monotonic, and reduced motion removes both transforms and transitions immediately. In short viewports, its existing popup shifts beside the trigger to stay below the header; the normal 54px popup anchor remains unchanged. The floating trigger can overlap other scrolling article controls. Native search retains its existing target and is checked separately above.
+Four light/dark mobile/desktop states check 44px action, copy and drawer navigation rows, control-group overlap, keyboard activation, code-copy clearance and compact desktop sizes. The drawer wordmark retains Coopr’s 120px width, intrinsic height and 8px title padding; it is exempt from the 44px target check. The pinned native contents trigger retains its 38px size and floating placement. It stays fixed 32px above the viewport bottom and 16px from the right edge while pagination and branding scroll past it. The popup adapts the [official shadcn popover motion](https://github.com/shadcn-ui/ui/blob/main/apps/v4/registry/new-york-v4/ui/popover.tsx): a 150ms ease-out fade and 95% zoom from an 8px lower pose, anchored to its bottom-right corner. Opening and closing remain monotonic, and reduced motion removes both transforms and transitions immediately. The popup retains its native 54px anchor and half-viewport maximum height. The floating trigger can overlap other scrolling article controls. Native search retains its existing target and is checked separately above.
 
 The docs title bar is 64px at every viewport size. Its project wordmark matches the homepage header's visible height (26.84px through 600px; 30.20px above), with intrinsic width and project CSS compensation for SVG padding. The bottom wordmark row follows the homepage's 27px vertical padding and 89px logo. Its divider fills the available width up to the native 61rem docs grid, including the sidebar and contents columns. The logo keeps the homepage's 24px horizontal inset through 600px and 40px above that, including when the divider reaches the docs grid limit. Previous/next navigation stays in the article.
 
-For continuous contents-button tracking on short and tall mobile viewports in both modes, run the self-contained driver against the generated fixture:
+For fixed contents-button positioning on short and tall mobile viewports in both modes, run the self-contained driver against the generated fixture:
 
 ```sh
 node tests/contents_tracking_browser.cjs /tmp/strio-theme-check/site /tmp/strio-contents-tracking
 ```
 
-It samples both scroll directions across the footer boundary, checks the corner inset, exact collision clearance, monotonic movement and absence of settling, and verifies popup keyboard behavior and reduced motion. Measurements and screenshots are written to the supplied output directory. The driver hit-tests the trigger and pagination throughout the sweep and checks pointer and keyboard popup access. At viewport heights of 400px or less, pagination reserves a 54px lane on its right side for the native control; the control can stay beside navigation and continue clearing the footer without entering the header. Taller viewports retain the full-width pagination and normal collision tracking.
+It samples both scroll directions through pagination and branding, checks constant corner insets and link clearance, and verifies popup keyboard behavior and reduced motion. Measurements and screenshots are written to the supplied output directory. The driver hit-tests the trigger and pagination throughout the sweep and checks pointer and keyboard popup access. Compact layouts reserve a 54px lane on the right of pagination for the fixed control. The left-aligned footer wordmark remains clear of that corner.
 
 For the compact popup motion, use the same generated fixture:
 
@@ -50,7 +50,7 @@ For the compact popup motion, use the same generated fixture:
 node tests/contents_motion_browser.cjs /tmp/strio-theme-check/site /tmp/strio-contents-motion
 ```
 
-This driver samples opening, visible closing and rapid reversals for opacity, scale and vertical movement, including RTL and short viewports. It checks no overshoot, immediate reduced-motion states, native keyboard/pointer access, unchanged trigger/footer tracking and the 959px/960px desktop boundary. Full mobile popup screenshots and frame measurements are written to the output directory.
+This driver samples opening, visible closing and rapid reversals for opacity, scale and vertical movement, including RTL and short viewports. It checks no overshoot, immediate reduced-motion states, native keyboard/pointer access, fixed trigger positioning and the 959px/960px desktop boundary. Full mobile popup screenshots and frame measurements are written to the output directory.
 
 For project-accent and shared-syntax checks, build two fresh fixtures and run the self-contained browser driver:
 
