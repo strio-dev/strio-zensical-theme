@@ -37,11 +37,11 @@ async function measure(page) {
         const css = getComputedStyle(rail);
         return {
           railHeight: r.height, railWidth: r.width, padding: css.padding, radius: css.borderRadius,
-          shadow: css.boxShadow, indicator: getComputedStyle(rail, '::before').display,
+          background: css.backgroundColor, itemGap: css.columnGap, shadow: css.boxShadow, indicator: getComputedStyle(rail, '::before').display,
           gap: panel.getBoundingClientRect().top - r.bottom,
           labels: [...rail.children].filter(el => el.matches('label')).map(el => {
-            const b = el.getBoundingClientRect(), t = getComputedStyle(el);
-            return { width: b.width, height: b.height, radius: t.borderRadius, font: t.fontSize, line: t.lineHeight, weight: t.fontWeight, background: t.backgroundColor };
+            const b = el.getBoundingClientRect(), t = getComputedStyle(el), line = getComputedStyle(el, '::after');
+            return { underline: { opacity: line.opacity, height: line.height, bottom: line.bottom, color: line.backgroundColor }, width: b.width, height: b.height, radius: t.borderRadius, font: t.fontSize, line: t.lineHeight, weight: t.fontWeight, background: t.backgroundColor };
           }),
         };
       })(),
@@ -102,13 +102,17 @@ async function measure(page) {
       assert(state.tabSet.corners.every(n => n !== 8), 'Tab content remains open rather than becoming an enclosure');
       assert.equal(state.tabs.railHeight, touch ? 52 : 36, 'Luma rail retains its compact desktop and touch sizes');
       assert.equal(state.tabs.padding, '4px', 'Luma rail inset');
-      assert.equal(state.tabs.radius, '9999px', 'Luma capsule rail');
+      assert.equal(state.tabs.radius, '0px', 'Luma line list has no rounded surface');
+      assert.equal(state.tabs.background, 'rgba(0, 0, 0, 0)', 'Line list stays transparent');
+      assert.equal(state.tabs.itemGap, '4px', 'Official line variant spaces triggers by 4px');
       assert.equal(state.tabs.shadow, 'none', 'Native underline separator is removed');
-      assert.equal(state.tabs.indicator, 'none', 'Default Luma tabs have no moving underline');
+      assert.equal(state.tabs.indicator, 'none', 'The native moving underline is replaced by per-trigger Luma lines');
       assert.equal(state.tabs.gap, 8, 'Tab controls stay separate from content');
       assert(state.tabs.labels.every(label => label.height === (touch ? 44 : 28)), 'Tab target heights');
       assert(state.tabs.labels.every(label => label.radius === '9999px' && label.font === '14px' && label.line === '20px' && label.weight === '500'), 'Luma tab labels retain the same scale at all root sizes');
-      assert(state.tabs.labels[0].background !== 'rgba(0, 0, 0, 0)' && state.tabs.labels.slice(1).every(label => label.background === 'rgba(0, 0, 0, 0)'), 'One selected capsule supplies the quiet highlight');
+      assert(state.tabs.labels.every(label => label.background === 'rgba(0, 0, 0, 0)'), 'Line triggers remain transparent in both modes');
+      assert(state.tabs.labels.every(label => label.underline.height === '2px' && label.underline.bottom === '-5px'), 'Official Luma line geometry');
+      assert(state.tabs.labels[0].underline.opacity === '1' && state.tabs.labels.slice(1).every(label => label.underline.opacity === '0'), 'Only the selected tab paints an underline');
       if (touch) assert(state.tabs.labels.every(label => label.width >= 44), 'Tab target widths');
       for (const item of state.code) {
         let code, pre;

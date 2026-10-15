@@ -94,11 +94,12 @@ const startServer = async folder => {
     const tabSet=page.locator('.md-content .tabbed-set').first();
     await tabSet.locator('input').first().focus();
     const tabFocus=await tabSet.locator('.tabbed-labels label').first().evaluate(element=>{
-     const s=getComputedStyle(element);return {outline:s.outlineColor,style:s.outlineStyle,indicator:getComputedStyle(element.parentElement,'::before').display};
+     const s=getComputedStyle(element);return {outline:s.outlineColor,style:s.outlineStyle,indicator:getComputedStyle(element.parentElement,'::before').display,line:getComputedStyle(element,'::after').backgroundColor,foreground:s.color};
     });
     assert.equal(tabFocus.outline,normal.background,'Tab keyboard focus retains the project accent');
     assert.equal(tabFocus.style,'solid');
-    assert.equal(tabFocus.indicator,'none','Default Luma tabs use a selected capsule without an underline');
+    assert.equal(tabFocus.indicator,'none','Luma line tabs use per-trigger indicators');
+    assert.equal(tabFocus.line,tabFocus.foreground,'The line follows foreground while focus retains the project accent');
     await page.locator('.md-content .highlight').first().screenshot({path:path.join(directory,`${accent}-${colorScheme}-${width}-code.png`)});
     await page.goto(hosts[accent].base+'components/',{waitUntil:'networkidle'});await page.waitForTimeout(220);
     const link = await page.locator('.md-content p a:not(.md-button)').first().evaluate(element=>({color:getComputedStyle(element).color,decoration:getComputedStyle(element).textDecorationColor,style:getComputedStyle(element).textDecorationLine}));

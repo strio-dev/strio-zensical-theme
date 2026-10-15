@@ -533,27 +533,32 @@
 .md-content__inner .highlight > .highlighttable > tbody > tr:nth-child(2) > .code > div > pre,
 .md-content__inner .highlight > .highlighttable > tbody > tr:nth-child(2) > .code > div > pre > code { border-start-end-radius: 0; }
 
-/* Luma default tabs: a muted capsule rail and selected capsule, separated from content.
+/* Luma line tabs: transparent controls with a foreground underline on the selected tab.
  * Reference: shadcn-ui/ui apps/v4/registry/styles/style-luma.css, Tabs.
  * Fixed pixel sizes retain Luma's scale at Zensical's larger root font sizes. */
 @media screen {
   .md-content__inner .tabbed-set { gap: 8px; }
   [dir] .md-content__inner .tabbed-set > .tabbed-labels {
-    display: inline-flex; align-self: flex-start; align-items: center;
+    display: inline-flex; align-self: flex-start; align-items: center; gap: 4px;
     width: fit-content; max-width: 100%; height: 36px; margin: 0; padding: 4px;
-    border-radius: 9999px; background: var(--strio-palette-surface-raised);
+    border-radius: 0; background: transparent;
     box-shadow: none; scroll-padding-inline: 4px;
   }
   .md-content__inner .tabbed-set > .tabbed-labels::before,
   .md-content__inner .tabbed-set > .tabbed-labels::after { display: none; }
   .md-content__inner .tabbed-labels > label {
-    display: inline-flex; flex: 1 0 auto; align-items: center; justify-content: center;
+    position: relative; display: inline-flex; flex: 1 0 auto; align-items: center; justify-content: center;
     height: 28px; min-height: 28px; margin: 0; padding: 4px 12px;
     border: 1px solid transparent; border-radius: 9999px;
     border-color: transparent !important; /* Luma also overrides native active borders. */
     color: var(--strio-palette-text-muted); background: transparent;
     font-size: 14px; font-weight: 500; line-height: 20px;
     transition: background-color 150ms, color 150ms, box-shadow 150ms;
+  }
+  .md-content__inner .tabbed-labels > label::after {
+    position: absolute; inset-inline: 0; bottom: -5px; height: 2px;
+    content: ""; background: var(--strio-palette-text); opacity: 0;
+    transition: opacity 150ms;
   }
   .md-content__inner .tabbed-labels--linked > label { padding: 0; }
   body[data-md-color-scheme] .md-content__inner .tabbed-labels--linked > label > a {
@@ -583,11 +588,28 @@
   .md-content__inner .tabbed-set > input:nth-child(19):checked ~ .tabbed-labels > label:nth-child(19),
   .md-content__inner .tabbed-set > input:nth-child(20):checked ~ .tabbed-labels > label:nth-child(20) {
     border-color: transparent; color: var(--strio-palette-text);
-    background: var(--strio-tab-active-bg, var(--strio-palette-surface));
+    background: transparent;
   }
-  [data-md-color-scheme="slate"] .md-content__inner .tabbed-labels > label {
-    --strio-tab-active-bg: color-mix(in srgb, var(--strio-palette-border) 30%, transparent);
-  }
+  .md-content__inner .tabbed-set > input:nth-child(1):checked ~ .tabbed-labels > label:nth-child(1)::after,
+  .md-content__inner .tabbed-set > input:nth-child(2):checked ~ .tabbed-labels > label:nth-child(2)::after,
+  .md-content__inner .tabbed-set > input:nth-child(3):checked ~ .tabbed-labels > label:nth-child(3)::after,
+  .md-content__inner .tabbed-set > input:nth-child(4):checked ~ .tabbed-labels > label:nth-child(4)::after,
+  .md-content__inner .tabbed-set > input:nth-child(5):checked ~ .tabbed-labels > label:nth-child(5)::after,
+  .md-content__inner .tabbed-set > input:nth-child(6):checked ~ .tabbed-labels > label:nth-child(6)::after,
+  .md-content__inner .tabbed-set > input:nth-child(7):checked ~ .tabbed-labels > label:nth-child(7)::after,
+  .md-content__inner .tabbed-set > input:nth-child(8):checked ~ .tabbed-labels > label:nth-child(8)::after,
+  .md-content__inner .tabbed-set > input:nth-child(9):checked ~ .tabbed-labels > label:nth-child(9)::after,
+  .md-content__inner .tabbed-set > input:nth-child(10):checked ~ .tabbed-labels > label:nth-child(10)::after,
+  .md-content__inner .tabbed-set > input:nth-child(11):checked ~ .tabbed-labels > label:nth-child(11)::after,
+  .md-content__inner .tabbed-set > input:nth-child(12):checked ~ .tabbed-labels > label:nth-child(12)::after,
+  .md-content__inner .tabbed-set > input:nth-child(13):checked ~ .tabbed-labels > label:nth-child(13)::after,
+  .md-content__inner .tabbed-set > input:nth-child(14):checked ~ .tabbed-labels > label:nth-child(14)::after,
+  .md-content__inner .tabbed-set > input:nth-child(15):checked ~ .tabbed-labels > label:nth-child(15)::after,
+  .md-content__inner .tabbed-set > input:nth-child(16):checked ~ .tabbed-labels > label:nth-child(16)::after,
+  .md-content__inner .tabbed-set > input:nth-child(17):checked ~ .tabbed-labels > label:nth-child(17)::after,
+  .md-content__inner .tabbed-set > input:nth-child(18):checked ~ .tabbed-labels > label:nth-child(18)::after,
+  .md-content__inner .tabbed-set > input:nth-child(19):checked ~ .tabbed-labels > label:nth-child(19)::after,
+  .md-content__inner .tabbed-set > input:nth-child(20):checked ~ .tabbed-labels > label:nth-child(20)::after { opacity: 1; }
   .md-content__inner .tabbed-set > input:nth-child(1):is(:focus-visible, .focus-visible) ~ .tabbed-labels > label:nth-child(1),
   .md-content__inner .tabbed-set > input:nth-child(2):is(:focus-visible, .focus-visible) ~ .tabbed-labels > label:nth-child(2),
   .md-content__inner .tabbed-set > input:nth-child(3):is(:focus-visible, .focus-visible) ~ .tabbed-labels > label:nth-child(3),
@@ -620,7 +642,8 @@
   .md-content__inner .tabbed-labels > label { min-width: 44px; height: 44px; min-height: 44px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .md-content__inner .tabbed-labels > label { transition: none; }
+  .md-content__inner .tabbed-labels > label,
+  .md-content__inner .tabbed-labels > label::after { transition: none; }
 }
 
 /* A separated tab panel keeps the same independent code corners as other panels. */
