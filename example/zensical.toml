@@ -11,6 +11,7 @@ nav = [{ "Overview" = "index.md" }, { "Details" = "details.md" }, { "Components"
 
 [project.theme]
 logo = "assets/acme-corner.svg"
+favicon = "assets/favicon.svg"
 
 # Acme chooses its UI hue; shared syntax colors remain unchanged.
 [project.extra]
